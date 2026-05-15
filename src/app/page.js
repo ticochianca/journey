@@ -8,15 +8,19 @@ export default function Home() {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' ou 'list'
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     origin: '',
     experiences_count: 0,
     phone: '',
+    status: 'Prospecto',
     observations: ''
   });
   const router = useRouter();
+
+  const statusOptions = ['Prospecto', 'Agendado', 'Concluído', 'Em Acompanhamento'];
 
   useEffect(() => {
     checkUser();
@@ -62,7 +66,7 @@ export default function Home() {
       alert('Erro ao salvar contato: ' + error.message);
     } else {
       setIsModalOpen(false);
-      setFormData({ name: '', origin: '', experiences_count: 0, phone: '', observations: '' });
+      setFormData({ name: '', origin: '', experiences_count: 0, phone: '', status: 'Prospecto', observations: '' });
       fetchContacts();
     }
   }
@@ -70,6 +74,11 @@ export default function Home() {
   const openWhatsApp = (phone) => {
     const cleanPhone = phone.replace(/\D/g, '');
     window.open(`https://wa.me/${cleanPhone}`, '_blank');
+  };
+
+  const getStatusClass = (status) => {
+    const s = status?.toLowerCase().replace(' ', '-') || 'prospecto';
+    return `status-badge status-${s}`;
   };
 
   if (!user) return <div style={{ textAlign: 'center', padding: '5rem' }}>Verificando acesso...</div>;
@@ -91,38 +100,92 @@ export default function Home() {
         </div>
       </header>
 
+      <div className="view-toggle">
+        <button 
+          className={viewMode === 'grid' ? 'active' : ''} 
+          onClick={() => setViewMode('grid')}
+        >
+          Grid
+        </button>
+        <button 
+          className={viewMode === 'list' ? 'active' : ''} 
+          onClick={() => setViewMode('list')}
+        >
+          Lista
+        </button>
+      </div>
+
       {loading ? (
         <div style={{ textAlign: 'center', padding: '3rem' }}>Carregando trilha...</div>
       ) : (
-        <div className="contact-grid">
-          {contacts.map((contact) => (
-            <div key={contact.id} className="card">
-              <h3>{contact.name}</h3>
-              <div className="meta">Origem: {contact.origin || 'Não informada'}</div>
-              <div className="stats">
-                <span className="badge">{contact.experiences_count} Experiências</span>
-              </div>
-              <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
-                {contact.observations}
-              </p>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                {contact.phone && (
-                  <button 
-                    className="btn btn-whatsapp" 
-                    onClick={() => openWhatsApp(contact.phone)}
-                  >
-                    WhatsApp
-                  </button>
-                )}
-              </div>
+        <>
+          {viewMode === 'grid' ? (
+            <div className="contact-grid">
+              {contacts.map((contact) => (
+                <div key={contact.id} className="card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <h3 style={{ margin: 0 }}>{contact.name}</h3>
+                    <span className={getStatusClass(contact.status)}>{contact.status || 'Prospecto'}</span>
+                  </div>
+                  <div className="meta">Origem: {contact.origin || 'Não informada'}</div>
+                  <div className="stats">
+                    <span className="badge">{contact.experiences_count} Experiências</span>
+                  </div>
+                  <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
+                    {contact.observations}
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    {contact.phone && (
+                      <button 
+                        className="btn btn-whatsapp" 
+                        onClick={() => openWhatsApp(contact.phone)}
+                      >
+                        WhatsApp
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          ) : (
+            <div className="contact-list-view">
+              <div className="list-item" style={{ background: 'transparent', border: 'none', boxShadow: 'none', fontWeight: 'bold', color: 'var(--text-muted)' }}>
+                <div>Nome</div>
+                <div>Origem</div>
+                <div>Status</div>
+                <div>Exp.</div>
+                <div>Ações</div>
+              </div>
+              {contacts.map((contact) => (
+                <div key={contact.id} className="list-item fade-in">
+                  <div style={{ fontWeight: '600' }}>{contact.name}</div>
+                  <div className="meta" style={{ marginBottom: 0 }}>{contact.origin || '-'}</div>
+                  <div>
+                    <span className={getStatusClass(contact.status)}>{contact.status || 'Prospecto'}</span>
+                  </div>
+                  <div>{contact.experiences_count}</div>
+                  <div>
+                    {contact.phone && (
+                      <button 
+                        className="btn btn-whatsapp" 
+                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                        onClick={() => openWhatsApp(contact.phone)}
+                      >
+                        Zap
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          
           {contacts.length === 0 && (
-            <p style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
-              Nenhum contato encontrado. Comece sua jornada adicionando um!
+            <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+              Nenhum contato encontrado.
             </p>
           )}
-        </div>
+        </>
       )}
 
       {isModalOpen && (
@@ -140,14 +203,28 @@ export default function Home() {
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                 />
               </div>
-              <div className="form-group">
-                <label>Origem (Indicação ou Local)</label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  value={formData.origin}
-                  onChange={(e) => setFormData({...formData, origin: e.target.value})}
-                />
+              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label>Origem</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={formData.origin}
+                    onChange={(e) => setFormData({...formData, origin: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label>Status</label>
+                  <select 
+                    className="form-control"
+                    value={formData.status}
+                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  >
+                    {statusOptions.map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>

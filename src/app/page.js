@@ -8,19 +8,18 @@ export default function Home() {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' ou 'list'
+  const [viewMode, setViewMode] = useState('grid');
+  const [statuses, setStatuses] = useState([]); // Agora dinâmico
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     origin: '',
     experiences_count: 0,
     phone: '',
-    status: 'Prospecto',
+    status: '',
     observations: ''
   });
   const router = useRouter();
-
-  const statusOptions = ['Prospecto', 'Agendado', 'Concluído', 'Em Acompanhamento'];
 
   useEffect(() => {
     checkUser();
@@ -32,22 +31,33 @@ export default function Home() {
       router.push('/login');
     } else {
       setUser(user);
-      fetchContacts();
+      fetchData();
     }
   }
 
-  async function fetchContacts() {
+  async function fetchData() {
     setLoading(true);
-    const { data, error } = await supabase
+    
+    // Buscar contatos
+    const { data: contactData } = await supabase
       .from('contacts')
       .select('*')
       .order('created_at', { ascending: false });
+    
+    // Buscar status cadastrados
+    const { data: statusData } = await supabase
+      .from('statuses')
+      .select('name')
+      .order('name');
 
-    if (error) {
-      console.error('Error fetching contacts:', error);
-    } else {
-      setContacts(data);
+    if (contactData) setContacts(contactData);
+    if (statusData) {
+      setStatuses(statusData.map(s => s.name));
+      if (!formData.status && statusData.length > 0) {
+        setFormData(prev => ({ ...prev, status: statusData[0].name }));
+      }
     }
+    
     setLoading(false);
   }
 
@@ -93,6 +103,9 @@ export default function Home() {
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
             + Novo Contato
+          </button>
+          <button className="btn" style={{ background: '#eee' }} onClick={() => router.push('/settings/statuses')}>
+            Configurar Status
           </button>
           <button className="btn" style={{ background: '#eee' }} onClick={handleLogout}>
             Sair
@@ -220,7 +233,7 @@ export default function Home() {
                     value={formData.status}
                     onChange={(e) => setFormData({...formData, status: e.target.value})}
                   >
-                    {statusOptions.map(opt => (
+                    {statuses.map(opt => (
                       <option key={opt} value={opt}>{opt}</option>
                     ))}
                   </select>

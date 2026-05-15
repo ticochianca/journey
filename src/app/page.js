@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -14,10 +16,21 @@ export default function Home() {
     phone: '',
     observations: ''
   });
+  const router = useRouter();
 
   useEffect(() => {
-    fetchContacts();
+    checkUser();
   }, []);
+
+  async function checkUser() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.push('/login');
+    } else {
+      setUser(user);
+      fetchContacts();
+    }
+  }
 
   async function fetchContacts() {
     setLoading(true);
@@ -32,6 +45,11 @@ export default function Home() {
       setContacts(data);
     }
     setLoading(false);
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push('/login');
   }
 
   async function handleSubmit(e) {
@@ -54,16 +72,23 @@ export default function Home() {
     window.open(`https://wa.me/${cleanPhone}`, '_blank');
   };
 
+  if (!user) return <div style={{ textAlign: 'center', padding: '5rem' }}>Verificando acesso...</div>;
+
   return (
     <div className="container fade-in">
       <header>
         <div>
           <h1>Journey</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Gestão de Contatos & Experiências</p>
+          <p style={{ color: 'var(--text-muted)' }}>Bem-vindo, {user.email}</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-          + Novo Contato
-        </button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+            + Novo Contato
+          </button>
+          <button className="btn" style={{ background: '#eee' }} onClick={handleLogout}>
+            Sair
+          </button>
+        </div>
       </header>
 
       {loading ? (

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function EventDetail({ params }) {
+  const [eventId, setEventId] = useState(null);
   const [event, setEvent] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [availableContacts, setAvailableContacts] = useState([]);
@@ -13,14 +14,20 @@ export default function EventDetail({ params }) {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedContactIds, setSelectedContactIds] = useState(new Set());
   const router = useRouter();
-  
-  // params is a Promise in recent Next.js versions but can be handled synchronously if unwrapped,
-  // or we can just use React.use() if needed. In Next.js 14 it's often passed directly, but Next.js 15 uses promises.
-  // For safety with Next 13/14 App router, params.id is generally accessible.
-  const eventId = params.id;
 
   useEffect(() => {
-    fetchEventData();
+    // Resolve params de forma compatível com Next.js antigo (síncrono) e novo (assíncrono)
+    Promise.resolve(params).then((resolved) => {
+      if (resolved && resolved.id) {
+        setEventId(resolved.id);
+      }
+    });
+  }, [params]);
+
+  useEffect(() => {
+    if (eventId) {
+      fetchEventData();
+    }
   }, [eventId]);
 
   async function fetchEventData() {

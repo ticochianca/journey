@@ -18,8 +18,11 @@ export default function Home() {
     phone: '',
     status: '',
     last_interaction: '',
+    avisar: 'Nunca',
     observations: ''
   });
+  const [avisarOption, setAvisarOption] = useState('Nunca');
+  const [selectedMonth, setSelectedMonth] = useState('Janeiro');
   const router = useRouter();
 
   useEffect(() => {
@@ -77,7 +80,9 @@ export default function Home() {
       alert('Erro ao salvar contato: ' + error.message);
     } else {
       setIsModalOpen(false);
-      setFormData({ name: '', origin: '', experiences_count: 0, phone: '', status: statuses[0] || 'Prospecto', last_interaction: '', observations: '' });
+      setFormData({ name: '', origin: '', experiences_count: 0, phone: '', status: statuses[0] || 'Prospecto', last_interaction: '', avisar: 'Nunca', observations: '' });
+      setAvisarOption('Nunca');
+      setSelectedMonth('Janeiro');
       fetchData(); // Correção: Chamando fetchData em vez do antigo fetchContacts
     }
   }
@@ -138,6 +143,7 @@ export default function Home() {
                 <div>Status</div>
                 <div>Exp.</div>
                 <div>Última Interação</div>
+                <div>Avisar</div>
                 <div>Ações</div>
               </div>
               
@@ -155,6 +161,18 @@ export default function Home() {
                       ? new Date(contact.last_interaction + 'T00:00:00').toLocaleDateString('pt-BR') 
                       : '-'
                     }
+                  </div>
+                  <div>
+                    <span className="badge" style={{ 
+                      background: contact.avisar === 'Nunca' ? 'rgba(239, 83, 80, 0.1)' : contact.avisar === 'Sempre' ? 'rgba(102, 187, 106, 0.1)' : 'rgba(66, 165, 245, 0.1)', 
+                      color: contact.avisar === 'Nunca' ? '#ef5350' : contact.avisar === 'Sempre' ? '#66bb6a' : '#42a5f5',
+                      padding: '0.2rem 0.6rem',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      borderRadius: '8px'
+                    }}>
+                      {contact.avisar || 'Nunca'}
+                    </span>
                   </div>
                   <div>
                     {contact.phone && (
@@ -239,16 +257,57 @@ export default function Home() {
                   </div>
                 </div>
                 
-                {/* Campo de data para Última Interação */}
-                <div className="form-group">
-                  <label>Última Interação</label>
-                  <input 
-                    type="date" 
-                    className="form-control" 
-                    value={formData.last_interaction}
-                    onChange={(e) => setFormData({...formData, last_interaction: e.target.value})}
-                  />
+                {/* Campos de data para Última Interação e Notificação */}
+                <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label>Última Interação</label>
+                    <input 
+                      type="date" 
+                      className="form-control" 
+                      value={formData.last_interaction}
+                      onChange={(e) => setFormData({...formData, last_interaction: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label>Avisar</label>
+                    <select 
+                      className="form-control"
+                      value={avisarOption}
+                      onChange={(e) => {
+                        const opt = e.target.value;
+                        setAvisarOption(opt);
+                        if (opt === 'Nunca' || opt === 'Sempre') {
+                          setFormData({...formData, avisar: opt});
+                        } else {
+                          setFormData({...formData, avisar: 'A partir de ' + selectedMonth});
+                        }
+                      }}
+                    >
+                      <option value="Nunca">Nunca</option>
+                      <option value="Sempre">Sempre</option>
+                      <option value="mes">A partir do mês...</option>
+                    </select>
+                  </div>
                 </div>
+
+                {avisarOption === 'mes' && (
+                  <div className="form-group fade-in">
+                    <label>Selecione o mês para avisar</label>
+                    <select
+                      className="form-control"
+                      value={selectedMonth}
+                      onChange={(e) => {
+                        const m = e.target.value;
+                        setSelectedMonth(m);
+                        setFormData({...formData, avisar: 'A partir de ' + m});
+                      }}
+                    >
+                      {['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'].map(m => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="form-group">
                   <label>Observações</label>

@@ -372,44 +372,28 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label style={{ fontWeight: '600' }}>
-                    Status <span style={{ color: '#ef5350' }}>*</span>
-                  </label>
-                  <select 
-                    className="form-control"
-                    value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
-                  >
-                    {statuses.map(opt => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontWeight: '600' }}>
-                    Avisar <span style={{ color: '#ef5350' }}>*</span>
-                  </label>
-                  <select 
-                    className="form-control"
-                    value={avisarOption}
-                    onChange={(e) => {
-                      const opt = e.target.value;
-                      setAvisarOption(opt);
-                      if (opt === 'Nunca' || opt === 'Sempre') {
-                        setFormData({...formData, avisar: opt});
-                      } else {
-                        const dynamicMonths = getNext12Months();
-                        setFormData({...formData, avisar: 'A partir de ' + (selectedMonth || dynamicMonths[0])});
-                      }
-                    }}
-                  >
-                    <option value="Sempre">Sempre</option>
-                    <option value="Nunca">Nunca</option>
-                    <option value="mes">A partir do mês...</option>
-                  </select>
-                </div>
+              <div className="form-group">
+                <label style={{ fontWeight: '600' }}>
+                  Avisar <span style={{ color: '#ef5350' }}>*</span>
+                </label>
+                <select 
+                  className="form-control"
+                  value={avisarOption}
+                  onChange={(e) => {
+                    const opt = e.target.value;
+                    setAvisarOption(opt);
+                    if (opt === 'Nunca' || opt === 'Sempre') {
+                      setFormData({...formData, avisar: opt});
+                    } else {
+                      const dynamicMonths = getNext12Months();
+                      setFormData({...formData, avisar: 'A partir de ' + (selectedMonth || dynamicMonths[0])});
+                    }
+                  }}
+                >
+                  <option value="Sempre">Sempre</option>
+                  <option value="Nunca">Nunca</option>
+                  <option value="mes">A partir do mês...</option>
+                </select>
               </div>
 
               {avisarOption === 'mes' && (
@@ -475,26 +459,15 @@ export default function Home() {
                   Campos Opcionais
                 </h4>
                 
-                <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <label>Última Interação</label>
-                    <input 
-                      type="date" 
-                      className="form-control" 
-                      value={formData.last_interaction}
-                      onChange={(e) => setFormData({...formData, last_interaction: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label>Quem indicou</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={formData.origin}
-                      onChange={(e) => setFormData({...formData, origin: e.target.value})}
-                      placeholder="Ex: Amigo X, Instagram"
-                    />
-                  </div>
+                <div className="form-group">
+                  <label>Quem indicou</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={formData.origin}
+                    onChange={(e) => setFormData({...formData, origin: e.target.value})}
+                    placeholder="Ex: Amigo X, Instagram"
+                  />
                 </div>
 
                 <div className="form-group">

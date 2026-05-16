@@ -4,6 +4,21 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
+const ddiOptions = [
+  { code: '+55', name: '🇧🇷 Brasil' },
+  { code: '+1', name: '🇺🇸 EUA/Canadá' },
+  { code: '+351', name: '🇵🇹 Portugal' },
+  { code: '+34', name: '🇪🇸 Espanha' },
+  { code: '+44', name: '🇬🇧 Reino Unido' },
+  { code: '+54', name: '🇦🇷 Argentina' },
+  { code: '+56', name: '🇨🇱 Chile' },
+  { code: '+598', name: '🇺🇾 Uruguai' },
+  { code: '+57', name: '🇨🇴 Colômbia' },
+  { code: '+52', name: '🇲🇽 México' },
+  { code: '+39', name: '🇮🇹 Itália' },
+  { code: '+49', name: '🇩🇪 Alemanha' }
+];
+
 export default function Home() {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,12 +37,34 @@ export default function Home() {
     observations: ''
   });
   const [avisarOption, setAvisarOption] = useState('Sempre');
-  const [selectedMonth, setSelectedMonth] = useState('Janeiro');
+  
+  // Próximos 12 meses dinâmicos baseados no dia de hoje
+  const getNext12Months = () => {
+    const months = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    const result = [];
+    const now = new Date();
+    for (let i = 1; i <= 12; i++) {
+      const future = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const monthName = months[future.getMonth()];
+      const shortYear = future.getFullYear().toString().slice(-2);
+      result.push(`${monthName}/${shortYear}`);
+    }
+    return result;
+  };
+
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [countryCode, setCountryCode] = useState('+55');
+  const [phoneBody, setPhoneBody] = useState('');
+  const [isFirstExperience, setIsFirstExperience] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
 
   useEffect(() => {
     checkUser();
+    setSelectedMonth(getNext12Months()[0]);
   }, []);
 
   async function checkUser() {
@@ -74,9 +111,17 @@ export default function Home() {
   async function handleSubmit(e) {
     e.preventDefault();
     
+    // Combina o DDI e o corpo do telefone de forma limpa
+    const combinedPhone = phoneBody ? `${countryCode}${phoneBody.replace(/\D/g, '')}` : '';
+    
+    // Define o número de experiências com base no checkbox de primeira experiência
+    const expCount = isFirstExperience ? 0 : parseInt(formData.experiences_count || 1);
+
     // Sanitiza o campo de data para enviar NULL ao invés de string vazia ""
     const dataToInsert = {
       ...formData,
+      phone: combinedPhone,
+      experiences_count: expCount,
       last_interaction: formData.last_interaction === '' ? null : formData.last_interaction
     };
 
@@ -88,11 +133,27 @@ export default function Home() {
       alert('Erro ao salvar contato: ' + error.message);
     } else {
       setIsModalOpen(false);
-      setFormData({ name: '', origin: '', experiences_count: 0, phone: '', status: statuses[0] || 'Prospecto', last_interaction: '', avisar: 'Sempre', observations: '' });
-      setAvisarOption('Sempre');
-      setSelectedMonth('Janeiro');
+      resetFormState();
       fetchData();
     }
+  }
+
+  function resetFormState() {
+    setFormData({ 
+      name: '', 
+      origin: '', 
+      experiences_count: 0, 
+      phone: '', 
+      status: statuses[0] || 'Prospecto', 
+      last_interaction: '', 
+      avisar: 'Sempre', 
+      observations: '' 
+    });
+    setAvisarOption('Sempre');
+    setSelectedMonth(getNext12Months()[0]);
+    setCountryCode('+55');
+    setPhoneBody('');
+    setIsFirstExperience(true);
   }
 
   async function handleStatusChange(contactId, newStatus) {
@@ -265,31 +326,57 @@ export default function Home() {
 
       {isModalOpen && (
         <div className="modal-overlay">
-          <div className="modal-content">
+          <div className="modal-content" style={{ maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>Novo Viajante</h2>
             <form onSubmit={handleSubmit}>
+              
+              {/* Informações Obrigatórias */}
               <div className="form-group">
-                <label>Nome Completo</label>
+                <label style={{ fontWeight: '600' }}>
+                  Nome Completo <span style={{ color: '#ef5350' }}>*</span>
+                </label>
                 <input 
                   type="text" 
                   className="form-control" 
                   required 
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  placeholder="Ex: Thiago Chianca"
                 />
               </div>
-              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label>Origem</label>
+
+              <div className="form-group">
+                <label style={{ fontWeight: '600' }}>
+                  Telefone <span style={{ color: '#ef5350' }}>*</span>
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <select 
+                    className="form-control" 
+                    value={countryCode} 
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    style={{ width: '130px', cursor: 'pointer' }}
+                  >
+                    {ddiOptions.map(opt => (
+                      <option key={opt.code} value={opt.code}>{opt.name} ({opt.code})</option>
+                    ))}
+                  </select>
                   <input 
                     type="text" 
                     className="form-control" 
-                    value={formData.origin}
-                    onChange={(e) => setFormData({...formData, origin: e.target.value})}
+                    required 
+                    placeholder="DDD + Número (Ex: 11999999999)"
+                    value={phoneBody}
+                    onChange={(e) => setPhoneBody(e.target.value)}
+                    style={{ flex: 1 }}
                   />
                 </div>
+              </div>
+
+              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label>Status</label>
+                  <label style={{ fontWeight: '600' }}>
+                    Status <span style={{ color: '#ef5350' }}>*</span>
+                  </label>
                   <select 
                     className="form-control"
                     value={formData.status}
@@ -300,42 +387,10 @@ export default function Home() {
                     ))}
                   </select>
                 </div>
-              </div>
-              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label>Experiências</label>
-                  <input 
-                    type="number" 
-                    className="form-control" 
-                    value={formData.experiences_count}
-                    onChange={(e) => setFormData({...formData, experiences_count: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label>Telefone</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    placeholder="Ex: 5511999999999"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                  />
-                </div>
-              </div>
-              
-              {/* Campos de data para Última Interação e Notificação */}
-              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label>Última Interação</label>
-                  <input 
-                    type="date" 
-                    className="form-control" 
-                    value={formData.last_interaction}
-                    onChange={(e) => setFormData({...formData, last_interaction: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label>Avisar</label>
+                  <label style={{ fontWeight: '600' }}>
+                    Avisar <span style={{ color: '#ef5350' }}>*</span>
+                  </label>
                   <select 
                     className="form-control"
                     value={avisarOption}
@@ -345,12 +400,13 @@ export default function Home() {
                       if (opt === 'Nunca' || opt === 'Sempre') {
                         setFormData({...formData, avisar: opt});
                       } else {
-                        setFormData({...formData, avisar: 'A partir de ' + selectedMonth});
+                        const dynamicMonths = getNext12Months();
+                        setFormData({...formData, avisar: 'A partir de ' + (selectedMonth || dynamicMonths[0])});
                       }
                     }}
                   >
-                    <option value="Nunca">Nunca</option>
                     <option value="Sempre">Sempre</option>
+                    <option value="Nunca">Nunca</option>
                     <option value="mes">A partir do mês...</option>
                   </select>
                 </div>
@@ -358,7 +414,9 @@ export default function Home() {
 
               {avisarOption === 'mes' && (
                 <div className="form-group fade-in">
-                  <label>Selecione o mês para avisar</label>
+                  <label style={{ fontWeight: '600' }}>
+                    Selecione o mês/ano para avisar <span style={{ color: '#ef5350' }}>*</span>
+                  </label>
                   <select
                     className="form-control"
                     value={selectedMonth}
@@ -368,28 +426,95 @@ export default function Home() {
                       setFormData({...formData, avisar: 'A partir de ' + m});
                     }}
                   >
-                    {['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'].map(m => (
+                    {getNext12Months().map(m => (
                       <option key={m} value={m}>{m}</option>
                     ))}
                   </select>
                 </div>
               )}
 
-              <div className="form-group">
-                <label>Observações</label>
-                <textarea 
-                  className="form-control" 
-                  rows="3"
-                  value={formData.observations}
-                  onChange={(e) => setFormData({...formData, observations: e.target.value})}
-                ></textarea>
+              {/* Caixa de Primeira Experiência (Obrigatória, Sim por padrão) */}
+              <div className="form-group" style={{ 
+                background: 'rgba(45, 74, 62, 0.05)', 
+                padding: '1rem', 
+                borderRadius: '12px', 
+                border: '1px solid rgba(45, 74, 62, 0.1)',
+                marginTop: '1.5rem'
+              }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontWeight: '600' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={isFirstExperience} 
+                    onChange={(e) => setIsFirstExperience(e.target.checked)}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <span>Primeira experiência com enteógenos?</span>
+                </label>
+
+                {!isFirstExperience && (
+                  <div className="fade-in" style={{ marginTop: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '500' }}>
+                      Quantas experiências anteriores a pessoa possui? <span style={{ color: '#ef5350' }}>*</span>
+                    </label>
+                    <input 
+                      type="number" 
+                      min="1"
+                      className="form-control" 
+                      value={formData.experiences_count}
+                      onChange={(e) => setFormData({...formData, experiences_count: e.target.value})}
+                      placeholder="Ex: 3"
+                      required={!isFirstExperience}
+                    />
+                  </div>
+                )}
               </div>
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Salvar</button>
+
+              {/* Seção de Campos Opcionais */}
+              <div style={{ borderTop: '1px dashed rgba(0,0,0,0.15)', marginTop: '2rem', paddingTop: '1.5rem' }}>
+                <h4 style={{ fontSize: '0.85rem', color: 'var(--primary)', marginBottom: '1.2rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  Campos Opcionais
+                </h4>
+                
+                <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label>Última Interação</label>
+                    <input 
+                      type="date" 
+                      className="form-control" 
+                      value={formData.last_interaction}
+                      onChange={(e) => setFormData({...formData, last_interaction: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label>Quem indicou</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      value={formData.origin}
+                      onChange={(e) => setFormData({...formData, origin: e.target.value})}
+                      placeholder="Ex: Amigo X, Instagram"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Observações</label>
+                  <textarea 
+                    className="form-control" 
+                    rows="3"
+                    value={formData.observations}
+                    onChange={(e) => setFormData({...formData, observations: e.target.value})}
+                    placeholder="Histórico, cuidados médicos, detalhes importantes..."
+                  ></textarea>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}>Salvar Viajante</button>
                 <button 
                   type="button" 
                   className="btn" 
-                  style={{ background: '#eee' }}
+                  style={{ background: '#eee', justifyContent: 'center' }}
                   onClick={() => setIsModalOpen(false)}
                 >
                   Cancelar

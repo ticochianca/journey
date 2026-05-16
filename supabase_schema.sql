@@ -9,6 +9,7 @@ create table contacts (
   status text default 'Prospecto',
   last_interaction date,
   avisar text default 'Sempre',
+  remedio text default 'não informado',
   observations text
 );
 

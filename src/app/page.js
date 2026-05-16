@@ -26,6 +26,7 @@ export default function Home() {
   const [viewMode, setViewMode] = useState('list'); // Padrão agora é lista
   const [statuses, setStatuses] = useState([]); // Agora dinâmico
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingContact, setEditingContact] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     origin: '',
@@ -34,6 +35,7 @@ export default function Home() {
     status: '',
     last_interaction: '',
     avisar: 'Sempre',
+    remedio: 'não informado',
     observations: ''
   });
   const [avisarOption, setAvisarOption] = useState('Sempre');
@@ -118,27 +120,48 @@ export default function Home() {
     const expCount = isFirstExperience ? 0 : (parseInt(formData.experiences_count) || 1);
 
     // Sanitiza o campo de data para enviar NULL ao invés de string vazia ""
-    const dataToInsert = {
-      ...formData,
-      phone: combinedPhone,
+    const dataToSave = {
+      name: formData.name,
+      origin: formData.origin,
       experiences_count: expCount,
-      last_interaction: formData.last_interaction === '' ? null : formData.last_interaction
+      phone: combinedPhone,
+      status: formData.status || statuses[0] || 'Prospecto',
+      last_interaction: formData.last_interaction === '' ? null : formData.last_interaction,
+      avisar: formData.avisar,
+      remedio: formData.remedio || 'não informado',
+      observations: formData.observations
     };
 
-    const { data, error } = await supabase
-      .from('contacts')
-      .insert([dataToInsert]);
+    if (editingContact) {
+      const { error } = await supabase
+        .from('contacts')
+        .update(dataToSave)
+        .eq('id', editingContact.id);
 
-    if (error) {
-      alert('Erro ao salvar contato: ' + error.message);
+      if (error) {
+        alert('Erro ao atualizar viajante: ' + error.message);
+      } else {
+        setIsModalOpen(false);
+        resetFormState();
+        fetchData();
+      }
     } else {
-      setIsModalOpen(false);
-      resetFormState();
-      fetchData();
+      const { error } = await supabase
+        .from('contacts')
+        .insert([dataToSave]);
+
+      if (error) {
+        alert('Erro ao salvar contato: ' + error.message);
+      } else {
+        setIsModalOpen(false);
+        resetFormState();
+        fetchData();
+      }
     }
   }
 
   function resetFormState() {
+    setEditingContact(null);
     setFormData({ 
       name: '', 
       origin: '', 
@@ -147,6 +170,7 @@ export default function Home() {
       status: statuses[0] || 'Prospecto', 
       last_interaction: '', 
       avisar: 'Sempre', 
+      remedio: 'não informado',
       observations: '' 
     });
     setAvisarOption('Sempre');
@@ -228,6 +252,111 @@ export default function Home() {
     }
   };
 
+  const remedioOptions = [
+    { value: 'não informado', label: '❓ Não informado' },
+    { value: 'ok', label: '✅ Ok' },
+    { value: 'em andamento', label: '⏳ Em andamento' },
+    { value: 'não', label: '🚫 Não' }
+  ];
+
+  async function handleRemedioChange(contactId, newRemedio) {
+    const { error } = await supabase
+      .from('contacts')
+      .update({ remedio: newRemedio })
+      .eq('id', contactId);
+
+    if (error) {
+      alert('Erro ao atualizar remédio: ' + error.message);
+    } else {
+      // Atualização imediata no estado local
+      setContacts(prev => prev.map(c => c.id === contactId ? { ...c, remedio: newRemedio } : c));
+    }
+  }
+
+  const getRemedioStyle = (remedio) => {
+    const val = remedio || 'não informado';
+    const baseStyle = {
+      border: 'none',
+      cursor: 'pointer',
+      fontWeight: '600',
+      outline: 'none',
+      padding: '0.25rem 0.5rem',
+      borderRadius: '8px',
+      fontSize: '0.75rem',
+      appearance: 'none',
+      textAlign: 'center',
+      display: 'inline-block'
+    };
+
+    if (val === 'ok') {
+      return {
+        ...baseStyle,
+        background: 'rgba(102, 187, 106, 0.1)',
+        color: '#66bb6a'
+      };
+    } else if (val === 'em andamento') {
+      return {
+        ...baseStyle,
+        background: 'rgba(255, 167, 38, 0.1)',
+        color: '#ffa726'
+      };
+    } else if (val === 'não') {
+      return {
+        ...baseStyle,
+        background: 'rgba(239, 83, 80, 0.1)',
+        color: '#ef5350'
+      };
+    } else {
+      return {
+        ...baseStyle,
+        background: 'rgba(158, 158, 158, 0.15)',
+        color: '#9e9e9e'
+      };
+    }
+  };
+
+  const handleOpenContact = (contact) => {
+    setEditingContact(contact);
+    setFormData({
+      name: contact.name || '',
+      origin: contact.origin || '',
+      experiences_count: contact.experiences_count || 0,
+      phone: contact.phone || '',
+      status: contact.status || '',
+      last_interaction: contact.last_interaction || '',
+      avisar: contact.avisar || 'Sempre',
+      remedio: contact.remedio || 'não informado',
+      observations: contact.observations || ''
+    });
+
+    const phoneVal = contact.phone || '';
+    let foundDdi = '+55';
+    let foundBody = phoneVal;
+
+    const sortedDdis = [...ddiOptions].sort((a, b) => b.code.length - a.code.length);
+    for (const opt of sortedDdis) {
+      if (phoneVal.startsWith(opt.code)) {
+        foundDdi = opt.code;
+        foundBody = phoneVal.slice(opt.code.length);
+        break;
+      }
+    }
+    setCountryCode(foundDdi);
+    setPhoneBody(foundBody);
+    setIsFirstExperience(contact.experiences_count === 0);
+
+    if (contact.avisar === 'Sempre' || contact.avisar === 'Nunca') {
+      setAvisarOption(contact.avisar);
+    } else if (contact.avisar?.startsWith('A partir de ')) {
+      setAvisarOption('mes');
+      setSelectedMonth(contact.avisar.replace('A partir de ', ''));
+    } else {
+      setAvisarOption('Sempre');
+    }
+
+    setIsModalOpen(true);
+  };
+
   const openWhatsApp = (phone) => {
     const cleanPhone = phone.replace(/\D/g, '');
     window.open(`https://wa.me/${cleanPhone}`, '_blank');
@@ -302,10 +431,10 @@ export default function Home() {
               {/* Header da Tabela Compacta */}
               <div className="list-item" style={{ background: 'transparent', border: 'none', boxShadow: 'none', fontWeight: 'bold', color: 'var(--text-muted)' }}>
                 <div>Nome</div>
-                <div>Origem</div>
                 <div>Status</div>
                 <div>Exp.</div>
                 <div>Última Interação</div>
+                <div>Remédio</div>
                 <div>Avisar</div>
                 <div>Ações</div>
               </div>
@@ -314,7 +443,6 @@ export default function Home() {
               {filteredContacts.map((contact) => (
                 <div key={contact.id} className="list-item fade-in">
                   <div style={{ fontWeight: '600' }}>{contact.name}</div>
-                  <div className="meta" style={{ marginBottom: 0 }}>{contact.origin || '-'}</div>
                   <div>
                     {/* Seletor Interativo de Status com Atualização Imediata */}
                     <select 
@@ -347,6 +475,18 @@ export default function Home() {
                     }
                   </div>
                   <div>
+                    {/* Seletor Interativo de Remédio */}
+                    <select
+                      value={contact.remedio || 'não informado'}
+                      onChange={(e) => handleRemedioChange(contact.id, e.target.value)}
+                      style={getRemedioStyle(contact.remedio)}
+                    >
+                      {remedioOptions.map(opt => (
+                        <option key={opt.value} value={opt.value} style={{ color: 'var(--text)', background: 'white' }}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
                     <select
                       value={contact.avisar || 'Nunca'}
                       onChange={(e) => handleAvisarChange(contact.id, e.target.value)}
@@ -357,7 +497,22 @@ export default function Home() {
                       ))}
                     </select>
                   </div>
-                  <div>
+                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                    <button 
+                      className="btn" 
+                      style={{ 
+                        padding: '0.4rem 0.8rem', 
+                        fontSize: '0.8rem', 
+                        background: 'rgba(45, 74, 62, 0.1)', 
+                        color: 'var(--primary)',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => handleOpenContact(contact)}
+                    >
+                      Abrir
+                    </button>
                     {contact.phone && (
                       <button 
                         className="btn btn-whatsapp" 
@@ -384,7 +539,9 @@ export default function Home() {
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>Novo Viajante</h2>
+            <h2 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>
+              {editingContact ? "Visualizar / Editar Viajante" : "Novo Viajante"}
+            </h2>
             <form onSubmit={handleSubmit}>
               
               {/* Informações Obrigatórias */}
@@ -473,6 +630,20 @@ export default function Home() {
                   </select>
                 </div>
               )}
+
+              <div className="form-group">
+                <label style={{ fontWeight: '600' }}>Remédio</label>
+                <select 
+                  className="form-control"
+                  value={formData.remedio || 'não informado'}
+                  onChange={(e) => setFormData({...formData, remedio: e.target.value})}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {remedioOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
 
               {/* Caixa de Primeira Experiência (Obrigatória, Sim por padrão) */}
               <div className="form-group" style={{ 

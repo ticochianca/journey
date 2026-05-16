@@ -114,8 +114,8 @@ export default function Home() {
     // Combina o DDI e o corpo do telefone de forma limpa
     const combinedPhone = phoneBody ? `${countryCode}${phoneBody.replace(/\D/g, '')}` : '';
     
-    // Define o número de experiências com base no checkbox de primeira experiência
-    const expCount = isFirstExperience ? 0 : parseInt(formData.experiences_count || 1);
+    // Define o número de experiências com base no checkbox de primeira experiência. Fallback para 1 caso esteja vazio.
+    const expCount = isFirstExperience ? 0 : (parseInt(formData.experiences_count) || 1);
 
     // Sanitiza o campo de data para enviar NULL ao invés de string vazia ""
     const dataToInsert = {
@@ -429,7 +429,14 @@ export default function Home() {
                   <input 
                     type="checkbox" 
                     checked={isFirstExperience} 
-                    onChange={(e) => setIsFirstExperience(e.target.checked)}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setIsFirstExperience(checked);
+                      // Se desmarcou e estava 0, vira 1 automaticamente
+                      if (!checked && (formData.experiences_count === 0 || formData.experiences_count === '0' || !formData.experiences_count)) {
+                        setFormData({...formData, experiences_count: 1});
+                      }
+                    }}
                     style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                   />
                   <span>Primeira experiência com enteógenos?</span>

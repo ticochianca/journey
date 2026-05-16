@@ -197,7 +197,6 @@ export default function EventDetail({ params }) {
             </div>
           ))}
         </div>
-        </div>
       )}
       </div>
 
@@ -260,8 +259,7 @@ export default function EventDetail({ params }) {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }

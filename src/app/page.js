@@ -18,11 +18,12 @@ export default function Home() {
     phone: '',
     status: '',
     last_interaction: '',
-    avisar: 'Nunca',
+    avisar: 'Sempre',
     observations: ''
   });
-  const [avisarOption, setAvisarOption] = useState('Nunca');
+  const [avisarOption, setAvisarOption] = useState('Sempre');
   const [selectedMonth, setSelectedMonth] = useState('Janeiro');
+  const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -80,10 +81,24 @@ export default function Home() {
       alert('Erro ao salvar contato: ' + error.message);
     } else {
       setIsModalOpen(false);
-      setFormData({ name: '', origin: '', experiences_count: 0, phone: '', status: statuses[0] || 'Prospecto', last_interaction: '', avisar: 'Nunca', observations: '' });
-      setAvisarOption('Nunca');
+      setFormData({ name: '', origin: '', experiences_count: 0, phone: '', status: statuses[0] || 'Prospecto', last_interaction: '', avisar: 'Sempre', observations: '' });
+      setAvisarOption('Sempre');
       setSelectedMonth('Janeiro');
-      fetchData(); // Correção: Chamando fetchData em vez do antigo fetchContacts
+      fetchData();
+    }
+  }
+
+  async function handleStatusChange(contactId, newStatus) {
+    const { error } = await supabase
+      .from('contacts')
+      .update({ status: newStatus })
+      .eq('id', contactId);
+
+    if (error) {
+      alert('Erro ao atualizar status: ' + error.message);
+    } else {
+      // Atualização imediata no estado local (UX impecável)
+      setContacts(prev => prev.map(c => c.id === contactId ? { ...c, status: newStatus } : c));
     }
   }
 
@@ -96,6 +111,10 @@ export default function Home() {
     const s = status?.toLowerCase().replace(' ', '-') || 'prospecto';
     return `status-badge status-${s}`;
   };
+
+  const filteredContacts = contacts.filter(contact =>
+    contact.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (!user) return <div style={{ textAlign: 'center', padding: '5rem' }}>Verificando acesso...</div>;
 
@@ -131,6 +150,24 @@ export default function Home() {
           </button>
         </header>
 
+        {/* Busca Rápida e Imediata */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="🔍 Buscar viajante por nome..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              padding: '0.75rem 1.2rem',
+              borderRadius: '12px',
+              fontSize: '0.95rem',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
+              border: '1px solid rgba(45, 74, 62, 0.15)'
+            }}
+          />
+        </div>
+
         {loading ? (
           <div style={{ textAlign: 'center', padding: '3rem' }}>Carregando trilha...</div>
         ) : (
@@ -148,12 +185,33 @@ export default function Home() {
               </div>
               
               {/* Linhas da Tabela */}
-              {contacts.map((contact) => (
+              {filteredContacts.map((contact) => (
                 <div key={contact.id} className="list-item fade-in">
                   <div style={{ fontWeight: '600' }}>{contact.name}</div>
                   <div className="meta" style={{ marginBottom: 0 }}>{contact.origin || '-'}</div>
                   <div>
-                    <span className={getStatusClass(contact.status)}>{contact.status || 'Prospecto'}</span>
+                    {/* Seletor Interativo de Status com Atualização Imediata */}
+                    <select 
+                      value={contact.status || 'Prospecto'} 
+                      className={getStatusClass(contact.status)}
+                      onChange={(e) => handleStatusChange(contact.id, e.target.value)}
+                      style={{
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: '600',
+                        outline: 'none',
+                        padding: '0.2rem 0.5rem',
+                        borderRadius: '20px',
+                        fontSize: '0.75rem',
+                        appearance: 'none',
+                        textAlign: 'center',
+                        display: 'inline-block'
+                      }}
+                    >
+                      {statuses.map(opt => (
+                        <option key={opt} value={opt} style={{ color: 'var(--text)', background: 'white' }}>{opt}</option>
+                      ))}
+                    </select>
                   </div>
                   <div style={{ paddingLeft: '0.5rem' }}>{contact.experiences_count}</div>
                   <div>
@@ -189,7 +247,7 @@ export default function Home() {
               ))}
             </div>
             
-            {contacts.length === 0 && (
+            {filteredContacts.length === 0 && (
               <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
                 Nenhum contato encontrado.
               </p>

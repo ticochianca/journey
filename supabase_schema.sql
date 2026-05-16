@@ -8,7 +8,7 @@ create table contacts (
   phone text,
   status text default 'Prospecto',
   last_interaction date,
-  avisar text default 'Nunca',
+  avisar text default 'Sempre',
   observations text
 );
 

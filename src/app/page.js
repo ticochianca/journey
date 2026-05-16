@@ -104,6 +104,9 @@ export default function Home() {
           <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
             + Novo Contato
           </button>
+          <button className="btn" style={{ background: '#eee' }} onClick={() => router.push('/events')}>
+            🎪 Eventos
+          </button>
           <button className="btn" style={{ background: '#eee' }} onClick={() => router.push('/settings/statuses')}>
             Configurar Status
           </button>

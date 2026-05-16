@@ -26,3 +26,22 @@ with check (true);
 -- to anon
 -- using (true)
 -- with check (true);
+
+
+-- Criar tabela de eventos
+create table events (
+  id uuid default gen_random_uuid() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  name text not null,
+  date date,
+  description text
+);
+
+-- Tabela de relacionamento: Participantes do evento
+create table event_participants (
+  event_id uuid references events(id) on delete cascade,
+  contact_id uuid references contacts(id) on delete cascade,
+  status text default 'Confirmado',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  primary key (event_id, contact_id)
+);

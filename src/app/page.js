@@ -450,7 +450,14 @@ export default function Home() {
               
               {/* Linhas da Tabela */}
               {filteredContacts.map((contact) => (
-                <div key={contact.id} className="list-item fade-in">
+                <div 
+                  key={contact.id} 
+                  className="list-item fade-in"
+                  style={{
+                    position: 'relative',
+                    zIndex: openRemedioId === contact.id ? 100 : 1
+                  }}
+                >
                   <div style={{ fontWeight: '600' }}>{contact.name}</div>
                   <div>
                     {/* Seletor Interativo de Status com Atualização Imediata */}
@@ -486,44 +493,53 @@ export default function Home() {
                   <div style={{ position: 'relative' }}>
                     {/* Seletor Interativo Customizado de Remédio */}
                     <button
+                      type="button"
                       onClick={() => setOpenRemedioId(openRemedioId === contact.id ? null : contact.id)}
                       style={{
                         ...getRemedioStyle(contact.remedio),
-                        padding: '0.35rem 0.6rem',
-                        borderRadius: '20px',
-                        fontSize: '1rem',
-                        border: 'none',
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        fontSize: '1.1rem',
+                        border: '1px solid rgba(0,0,0,0.08)',
                         cursor: 'pointer',
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                        transition: 'transform 0.15s ease'
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+                        transition: 'all 0.2s ease',
+                        padding: 0
                       }}
-                      onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
-                      onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.12)';
+                        e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.12)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'none';
+                        e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.06)';
+                      }}
                     >
                       {getRemedioIcon(contact.remedio)}
                     </button>
                     
                     {openRemedioId === contact.id && (
                       <>
-                        {/* Overlay invisível para capturar o clique fora */}
+                        {/* Overlay invisível para capturar o clique fora com zIndex altíssimo */}
                         <div 
                           onClick={() => setOpenRemedioId(null)} 
-                          style={{ position: 'fixed', inset: 0, zIndex: 999 }} 
+                          style={{ position: 'fixed', inset: 0, zIndex: 9999 }} 
                         />
                         <div style={{
                           position: 'absolute',
                           top: '100%',
                           left: '50%',
                           transform: 'translateX(-50%)',
-                          marginTop: '0.4rem',
-                          background: 'white',
+                          marginTop: '0.5rem',
+                          background: '#ffffff',
                           border: '1px solid rgba(45, 74, 62, 0.15)',
                           borderRadius: '10px',
-                          boxShadow: '0 6px 20px rgba(0,0,0,0.12)',
-                          zIndex: 1000,
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                          zIndex: 10000,
                           width: '160px',
                           overflow: 'hidden',
                           display: 'flex',
@@ -541,27 +557,27 @@ export default function Home() {
                               style={{
                                 background: 'transparent',
                                 border: 'none',
-                                padding: '0.5rem 0.75rem',
+                                padding: '0.6rem 0.8rem',
                                 borderRadius: '6px',
                                 textAlign: 'left',
-                                fontSize: '0.8rem',
+                                fontSize: '0.85rem',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.5rem',
-                                color: 'var(--text)',
+                                gap: '0.6rem',
+                                color: '#2d4a3e', // Texto escuro de alto contraste garantido
                                 fontWeight: contact.remedio === opt.value ? '600' : 'normal',
                                 backgroundColor: contact.remedio === opt.value ? 'rgba(45, 74, 62, 0.08)' : 'transparent',
                                 transition: 'background 0.2s'
                               }}
                               onMouseEnter={(e) => {
                                 if (contact.remedio !== opt.value) {
-                                  e.target.style.backgroundColor = 'rgba(45, 74, 62, 0.04)';
+                                  e.currentTarget.style.backgroundColor = 'rgba(45, 74, 62, 0.04)';
                                 }
                               }}
                               onMouseLeave={(e) => {
                                 if (contact.remedio !== opt.value) {
-                                  e.target.style.backgroundColor = 'transparent';
+                                  e.currentTarget.style.backgroundColor = 'transparent';
                                 }
                               }}
                             >

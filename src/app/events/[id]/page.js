@@ -197,7 +197,9 @@ export default function EventDetail({ params }) {
             </div>
           ))}
         </div>
+        </div>
       )}
+      </div>
 
       {/* Modal de Importação */}
       {isImportModalOpen && (
@@ -257,10 +259,9 @@ export default function EventDetail({ params }) {
                 Cancelar
               </button>
             </div>
-            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

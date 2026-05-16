@@ -130,6 +130,7 @@ export default function Events() {
           )}
         </div>
       )}
+      </div>
 
       {isModalOpen && (
         <div className="modal-overlay">
@@ -180,7 +181,6 @@ export default function Events() {
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 }

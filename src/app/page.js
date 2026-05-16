@@ -254,144 +254,144 @@ export default function Home() {
             )}
           </>
         )}
+      </div>
 
-        {isModalOpen && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <h2 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>Novo Viajante</h2>
-              <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                  <label>Nome Completo</label>
+      {isModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>Novo Viajante</h2>
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>Nome Completo</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  required 
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                />
+              </div>
+              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label>Origem</label>
                   <input 
                     type="text" 
                     className="form-control" 
-                    required 
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    value={formData.origin}
+                    onChange={(e) => setFormData({...formData, origin: e.target.value})}
                   />
                 </div>
-                <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <label>Origem</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={formData.origin}
-                      onChange={(e) => setFormData({...formData, origin: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label>Status</label>
-                    <select 
-                      className="form-control"
-                      value={formData.status}
-                      onChange={(e) => setFormData({...formData, status: e.target.value})}
-                    >
-                      {statuses.map(opt => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <label>Experiências</label>
-                    <input 
-                      type="number" 
-                      className="form-control" 
-                      value={formData.experiences_count}
-                      onChange={(e) => setFormData({...formData, experiences_count: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label>Telefone</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      placeholder="Ex: 5511999999999"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    />
-                  </div>
-                </div>
-                
-                {/* Campos de data para Última Interação e Notificação */}
-                <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <label>Última Interação</label>
-                    <input 
-                      type="date" 
-                      className="form-control" 
-                      value={formData.last_interaction}
-                      onChange={(e) => setFormData({...formData, last_interaction: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label>Avisar</label>
-                    <select 
-                      className="form-control"
-                      value={avisarOption}
-                      onChange={(e) => {
-                        const opt = e.target.value;
-                        setAvisarOption(opt);
-                        if (opt === 'Nunca' || opt === 'Sempre') {
-                          setFormData({...formData, avisar: opt});
-                        } else {
-                          setFormData({...formData, avisar: 'A partir de ' + selectedMonth});
-                        }
-                      }}
-                    >
-                      <option value="Nunca">Nunca</option>
-                      <option value="Sempre">Sempre</option>
-                      <option value="mes">A partir do mês...</option>
-                    </select>
-                  </div>
-                </div>
-
-                {avisarOption === 'mes' && (
-                  <div className="form-group fade-in">
-                    <label>Selecione o mês para avisar</label>
-                    <select
-                      className="form-control"
-                      value={selectedMonth}
-                      onChange={(e) => {
-                        const m = e.target.value;
-                        setSelectedMonth(m);
-                        setFormData({...formData, avisar: 'A partir de ' + m});
-                      }}
-                    >
-                      {['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'].map(m => (
-                        <option key={m} value={m}>{m}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                <div className="form-group">
-                  <label>Observações</label>
-                  <textarea 
-                    className="form-control" 
-                    rows="3"
-                    value={formData.observations}
-                    onChange={(e) => setFormData({...formData, observations: e.target.value})}
-                  ></textarea>
-                </div>
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Salvar</button>
-                  <button 
-                    type="button" 
-                    className="btn" 
-                    style={{ background: '#eee' }}
-                    onClick={() => setIsModalOpen(false)}
+                <div>
+                  <label>Status</label>
+                  <select 
+                    className="form-control"
+                    value={formData.status}
+                    onChange={(e) => setFormData({...formData, status: e.target.value})}
                   >
-                    Cancelar
-                  </button>
+                    {statuses.map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
                 </div>
-              </form>
-            </div>
+              </div>
+              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label>Experiências</label>
+                  <input 
+                    type="number" 
+                    className="form-control" 
+                    value={formData.experiences_count}
+                    onChange={(e) => setFormData({...formData, experiences_count: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label>Telefone</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder="Ex: 5511999999999"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              {/* Campos de data para Última Interação e Notificação */}
+              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label>Última Interação</label>
+                  <input 
+                    type="date" 
+                    className="form-control" 
+                    value={formData.last_interaction}
+                    onChange={(e) => setFormData({...formData, last_interaction: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label>Avisar</label>
+                  <select 
+                    className="form-control"
+                    value={avisarOption}
+                    onChange={(e) => {
+                      const opt = e.target.value;
+                      setAvisarOption(opt);
+                      if (opt === 'Nunca' || opt === 'Sempre') {
+                        setFormData({...formData, avisar: opt});
+                      } else {
+                        setFormData({...formData, avisar: 'A partir de ' + selectedMonth});
+                      }
+                    }}
+                  >
+                    <option value="Nunca">Nunca</option>
+                    <option value="Sempre">Sempre</option>
+                    <option value="mes">A partir do mês...</option>
+                  </select>
+                </div>
+              </div>
+
+              {avisarOption === 'mes' && (
+                <div className="form-group fade-in">
+                  <label>Selecione o mês para avisar</label>
+                  <select
+                    className="form-control"
+                    value={selectedMonth}
+                    onChange={(e) => {
+                      const m = e.target.value;
+                      setSelectedMonth(m);
+                      setFormData({...formData, avisar: 'A partir de ' + m});
+                    }}
+                  >
+                    {['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'].map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="form-group">
+                <label>Observações</label>
+                <textarea 
+                  className="form-control" 
+                  rows="3"
+                  value={formData.observations}
+                  onChange={(e) => setFormData({...formData, observations: e.target.value})}
+                ></textarea>
+              </div>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Salvar</button>
+                <button 
+                  type="button" 
+                  className="btn" 
+                  style={{ background: '#eee' }}
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

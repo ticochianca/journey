@@ -45,3 +45,26 @@ create table event_participants (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   primary key (event_id, contact_id)
 );
+
+-- Enable RLS and create policies for new tables
+alter table events enable row level security;
+alter table event_participants enable row level security;
+alter table statuses enable row level security;
+
+create policy "Allow all actions for authenticated users on events"
+on events for all
+to authenticated
+using (true)
+with check (true);
+
+create policy "Allow all actions for authenticated users on event_participants"
+on event_participants for all
+to authenticated
+using (true)
+with check (true);
+
+create policy "Allow all actions for authenticated users on statuses"
+on statuses for all
+to authenticated
+using (true)
+with check (true);

@@ -111,32 +111,55 @@ export default function EventDetail({ params }) {
     if (!error) {
       fetchEventData();
     }
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push('/login');
   }
 
   if (loading) return <div style={{ textAlign: 'center', padding: '5rem' }}>Carregando evento...</div>;
   if (!event) return <div style={{ textAlign: 'center', padding: '5rem' }}>Evento não encontrado.</div>;
 
   return (
-    <div className="container fade-in">
-      <header style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', marginBottom: '2rem', paddingBottom: '1rem' }}>
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-          <Link href="/events" className="btn" style={{ background: '#eee', textDecoration: 'none' }}>
-            ⬅ Voltar aos Eventos
-          </Link>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-          <div>
-            <h1 style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>{event.name}</h1>
-            <p style={{ color: 'var(--text-muted)' }}>
-              Data: {event.date ? new Date(event.date).toLocaleDateString('pt-BR') : 'A definir'}
-            </p>
-            {event.description && <p style={{ marginTop: '0.5rem' }}>{event.description}</p>}
-          </div>
-          <button className="btn btn-primary" onClick={openImportModal}>
-            + Importar Pessoas
+    <div>
+      {/* Barra de Navegação Premium Sticky no Topo */}
+      <nav className="navbar">
+        <a href="/" className="navbar-brand" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+          Journey<span style={{ color: 'var(--accent)' }}>.</span>
+        </a>
+        <div className="navbar-menu">
+          <a href="/" className="navbar-link">👥 Pessoas</a>
+          <a href="/events" className="navbar-link active">🎪 Eventos</a>
+          <a href="/settings/statuses" className="navbar-link">⚙️ Status</a>
+          <button 
+            className="btn" 
+            style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', marginLeft: '1rem', padding: '0.4rem 0.8rem', cursor: 'pointer' }}
+            onClick={handleLogout}
+          >
+            Sair
           </button>
         </div>
-      </header>
+      </nav>
+
+      <div className="container fade-in" style={{ paddingTop: '2rem' }}>
+        <header style={{ borderBottom: 'none', marginBottom: '1.5rem', paddingBottom: 0 }}>
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+            <Link href="/events" className="btn" style={{ background: '#eee', textDecoration: 'none' }}>
+              ⬅ Voltar aos Eventos
+            </Link>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+            <div>
+              <h1 style={{ color: 'var(--primary)', marginBottom: '0.5rem', fontSize: '1.8rem' }}>{event.name}</h1>
+              <p style={{ color: 'var(--text-muted)' }}>
+                Data: {event.date ? new Date(event.date + 'T00:00:00').toLocaleDateString('pt-BR') : 'A definir'}
+              </p>
+              {event.description && <p style={{ marginTop: '0.5rem' }}>{event.description}</p>}
+            </div>
+            <button className="btn btn-primary" onClick={openImportModal}>
+              + Importar Pessoas
+            </button>
+          </div>
+        </header>
 
       <h2 style={{ marginBottom: '1.5rem', color: 'var(--text)' }}>Participantes ({participants.length})</h2>
       

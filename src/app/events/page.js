@@ -61,28 +61,44 @@ export default function Events() {
     }
   }
 
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push('/login');
+  }
+
   if (!user) return <div style={{ textAlign: 'center', padding: '5rem' }}>Verificando acesso...</div>;
 
   return (
-    <div className="container fade-in">
-      <header style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', marginBottom: '2rem', paddingBottom: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '1rem' }}>
+    <div>
+      {/* Barra de Navegação Premium Sticky no Topo */}
+      <nav className="navbar">
+        <a href="/" className="navbar-brand" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+          Journey<span style={{ color: 'var(--accent)' }}>.</span>
+        </a>
+        <div className="navbar-menu">
+          <a href="/" className="navbar-link">👥 Pessoas</a>
+          <a href="/events" className="navbar-link active">🎪 Eventos</a>
+          <a href="/settings/statuses" className="navbar-link">⚙️ Status</a>
+          <button 
+            className="btn" 
+            style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', marginLeft: '1rem', padding: '0.4rem 0.8rem', cursor: 'pointer' }}
+            onClick={handleLogout}
+          >
+            Sair
+          </button>
+        </div>
+      </nav>
+
+      <div className="container fade-in" style={{ paddingTop: '2rem' }}>
+        <header style={{ borderBottom: 'none', marginBottom: '1.5rem', paddingBottom: 0 }}>
           <div>
-            <h1>Eventos Journey</h1>
+            <h1 style={{ fontSize: '1.8rem', color: 'var(--primary)' }}>Eventos Journey</h1>
             <p style={{ color: 'var(--text-muted)' }}>Gerencie retiros e cerimônias</p>
           </div>
           <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
             + Novo Evento
           </button>
-        </div>
-        
-        {/* Navegação Topo */}
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-          <Link href="/" className="btn" style={{ background: '#eee', textDecoration: 'none' }}>
-            ⬅ Pessoas
-          </Link>
-        </div>
-      </header>
+        </header>
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '3rem' }}>Carregando eventos...</div>

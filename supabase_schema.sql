@@ -7,6 +7,7 @@ create table contacts (
   experiences_count integer default 0,
   phone text,
   status text default 'Prospecto',
+  last_interaction date,
   observations text
 );
 

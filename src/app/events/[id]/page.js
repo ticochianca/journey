@@ -111,6 +111,8 @@ export default function EventDetail({ params }) {
     if (!error) {
       fetchEventData();
     }
+  }
+
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push('/login');
@@ -255,9 +257,10 @@ export default function EventDetail({ params }) {
                 Cancelar
               </button>
             </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

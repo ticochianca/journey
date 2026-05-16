@@ -73,9 +73,16 @@ export default function Home() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    
+    // Sanitiza o campo de data para enviar NULL ao invés de string vazia ""
+    const dataToInsert = {
+      ...formData,
+      last_interaction: formData.last_interaction === '' ? null : formData.last_interaction
+    };
+
     const { data, error } = await supabase
       .from('contacts')
-      .insert([formData]);
+      .insert([dataToInsert]);
 
     if (error) {
       alert('Erro ao salvar contato: ' + error.message);

@@ -48,9 +48,16 @@ export default function Events() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    
+    // Sanitiza o campo de data para enviar NULL ao invés de string vazia ""
+    const dataToInsert = {
+      ...formData,
+      date: formData.date === '' ? null : formData.date
+    };
+
     const { data, error } = await supabase
       .from('events')
-      .insert([formData]);
+      .insert([dataToInsert]);
 
     if (error) {
       alert('Erro ao criar evento: ' + error.message);

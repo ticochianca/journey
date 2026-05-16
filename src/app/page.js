@@ -62,7 +62,16 @@ export default function Home() {
   const [phoneBody, setPhoneBody] = useState('');
   const [isFirstExperience, setIsFirstExperience] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [openRemedioId, setOpenRemedioId] = useState(null);
   const router = useRouter();
+
+  const getRemedioIcon = (val) => {
+    const r = val?.toLowerCase() || 'não informado';
+    if (r === 'ok') return '✅';
+    if (r === 'em andamento') return '⏳';
+    if (r === 'não') return '🚫';
+    return '❓';
+  };
 
   useEffect(() => {
     checkUser();
@@ -474,17 +483,94 @@ export default function Home() {
                       : '-'
                     }
                   </div>
-                  <div>
-                    {/* Seletor Interativo de Remédio */}
-                    <select
-                      value={contact.remedio || 'não informado'}
-                      onChange={(e) => handleRemedioChange(contact.id, e.target.value)}
-                      style={getRemedioStyle(contact.remedio)}
+                  <div style={{ position: 'relative' }}>
+                    {/* Seletor Interativo Customizado de Remédio */}
+                    <button
+                      onClick={() => setOpenRemedioId(openRemedioId === contact.id ? null : contact.id)}
+                      style={{
+                        ...getRemedioStyle(contact.remedio),
+                        padding: '0.35rem 0.6rem',
+                        borderRadius: '20px',
+                        fontSize: '1rem',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                        transition: 'transform 0.15s ease'
+                      }}
+                      onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
+                      onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     >
-                      {remedioOptions.map(opt => (
-                        <option key={opt.value} value={opt.value} style={{ color: 'var(--text)', background: 'white' }}>{opt.label}</option>
-                      ))}
-                    </select>
+                      {getRemedioIcon(contact.remedio)}
+                    </button>
+                    
+                    {openRemedioId === contact.id && (
+                      <>
+                        {/* Overlay invisível para capturar o clique fora */}
+                        <div 
+                          onClick={() => setOpenRemedioId(null)} 
+                          style={{ position: 'fixed', inset: 0, zIndex: 999 }} 
+                        />
+                        <div style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          marginTop: '0.4rem',
+                          background: 'white',
+                          border: '1px solid rgba(45, 74, 62, 0.15)',
+                          borderRadius: '10px',
+                          boxShadow: '0 6px 20px rgba(0,0,0,0.12)',
+                          zIndex: 1000,
+                          width: '160px',
+                          overflow: 'hidden',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          padding: '0.3rem'
+                        }}>
+                          {remedioOptions.map(opt => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => {
+                                handleRemedioChange(contact.id, opt.value);
+                                setOpenRemedioId(null);
+                              }}
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                padding: '0.5rem 0.75rem',
+                                borderRadius: '6px',
+                                textAlign: 'left',
+                                fontSize: '0.8rem',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                color: 'var(--text)',
+                                fontWeight: contact.remedio === opt.value ? '600' : 'normal',
+                                backgroundColor: contact.remedio === opt.value ? 'rgba(45, 74, 62, 0.08)' : 'transparent',
+                                transition: 'background 0.2s'
+                              }}
+                              onMouseEnter={(e) => {
+                                if (contact.remedio !== opt.value) {
+                                  e.target.style.backgroundColor = 'rgba(45, 74, 62, 0.04)';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (contact.remedio !== opt.value) {
+                                  e.target.style.backgroundColor = 'transparent';
+                                }
+                              }}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                   <div>
                     <select

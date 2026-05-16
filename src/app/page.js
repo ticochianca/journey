@@ -170,6 +170,64 @@ export default function Home() {
     }
   }
 
+  async function handleAvisarChange(contactId, newAvisar) {
+    const { error } = await supabase
+      .from('contacts')
+      .update({ avisar: newAvisar })
+      .eq('id', contactId);
+
+    if (error) {
+      alert('Erro ao atualizar notificação: ' + error.message);
+    } else {
+      // Atualização imediata no estado local
+      setContacts(prev => prev.map(c => c.id === contactId ? { ...c, avisar: newAvisar } : c));
+    }
+  }
+
+  const getAvisarOptions = () => {
+    const list = ['Sempre', 'Nunca'];
+    getNext12Months().forEach(m => {
+      list.push(`A partir de ${m}`);
+    });
+    return list;
+  };
+
+  const getAvisarStyle = (avisar) => {
+    const val = avisar || 'Nunca';
+    const baseStyle = {
+      border: 'none',
+      cursor: 'pointer',
+      fontWeight: '600',
+      outline: 'none',
+      padding: '0.25rem 0.5rem',
+      borderRadius: '8px',
+      fontSize: '0.75rem',
+      appearance: 'none',
+      textAlign: 'center',
+      display: 'inline-block'
+    };
+
+    if (val === 'Nunca') {
+      return {
+        ...baseStyle,
+        background: 'rgba(239, 83, 80, 0.1)',
+        color: '#ef5350'
+      };
+    } else if (val === 'Sempre') {
+      return {
+        ...baseStyle,
+        background: 'rgba(102, 187, 106, 0.1)',
+        color: '#66bb6a'
+      };
+    } else {
+      return {
+        ...baseStyle,
+        background: 'rgba(66, 165, 245, 0.1)',
+        color: '#42a5f5'
+      };
+    }
+  };
+
   const openWhatsApp = (phone) => {
     const cleanPhone = phone.replace(/\D/g, '');
     window.open(`https://wa.me/${cleanPhone}`, '_blank');
@@ -289,16 +347,15 @@ export default function Home() {
                     }
                   </div>
                   <div>
-                    <span className="badge" style={{ 
-                      background: contact.avisar === 'Nunca' ? 'rgba(239, 83, 80, 0.1)' : contact.avisar === 'Sempre' ? 'rgba(102, 187, 106, 0.1)' : 'rgba(66, 165, 245, 0.1)', 
-                      color: contact.avisar === 'Nunca' ? '#ef5350' : contact.avisar === 'Sempre' ? '#66bb6a' : '#42a5f5',
-                      padding: '0.2rem 0.6rem',
-                      fontSize: '0.75rem',
-                      fontWeight: '600',
-                      borderRadius: '8px'
-                    }}>
-                      {contact.avisar || 'Nunca'}
-                    </span>
+                    <select
+                      value={contact.avisar || 'Nunca'}
+                      onChange={(e) => handleAvisarChange(contact.id, e.target.value)}
+                      style={getAvisarStyle(contact.avisar)}
+                    >
+                      {getAvisarOptions().map(opt => (
+                        <option key={opt} value={opt} style={{ color: 'var(--text)', background: 'white' }}>{opt}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     {contact.phone && (

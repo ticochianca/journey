@@ -393,7 +393,7 @@ export default function EventDetail({ params }) {
 
                       {/* 3. Status da Cerimônia */}
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 28px)', gap: '4px', justifyItems: 'center', alignItems: 'center' }}>
                           {[
                             { value: 'avisar', label: 'Avisar', icon: '📢' },
                             { value: 'avisado', label: 'Avisado', icon: '📲' },
@@ -415,8 +415,8 @@ export default function EventDetail({ params }) {
                               }
                             }
 
-                            const opacity = isLit ? 1 : 0.22;
-                            const scale = isLit ? 'scale(1.15)' : 'scale(0.9)';
+                            const opacity = isLit ? 1 : 0.25;
+                            const scale = 'scale(1)'; // Escala base idêntica para alinhamento perfeito sem variações!
                             const filter = isLit ? 'none' : 'grayscale(100%)';
                             
                             const isActiveStatus = p.status === step.value;

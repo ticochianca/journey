@@ -3,6 +3,7 @@ create table contacts (
   id uuid default gen_random_uuid() primary key,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   name text not null,
+  cpf text,
   origin text,
   experiences_count integer default 0,
   phone text,
@@ -10,6 +11,7 @@ create table contacts (
   last_interaction date,
   avisar text default 'Sempre',
   remedio text default 'não informado',
+  medications_list jsonb default '[]'::jsonb,
   observations text
 );
 

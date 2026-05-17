@@ -29,6 +29,7 @@ export default function Home() {
   const [editingContact, setEditingContact] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
+    cpf: '',
     origin: '',
     experiences_count: 0,
     phone: '',
@@ -36,6 +37,7 @@ export default function Home() {
     last_interaction: '',
     avisar: 'Sempre',
     remedio: 'não informado',
+    medications_list: [],
     observations: ''
   });
   const [avisarOption, setAvisarOption] = useState('Sempre');
@@ -63,6 +65,9 @@ export default function Home() {
   const [isFirstExperience, setIsFirstExperience] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [openRemedioId, setOpenRemedioId] = useState(null);
+  const [adminMedName, setAdminMedName] = useState('');
+  const [adminMedDosage, setAdminMedDosage] = useState('');
+  const [adminMedFreq, setAdminMedFreq] = useState('');
   const router = useRouter();
 
   const getRemedioIcon = (val) => {
@@ -131,6 +136,7 @@ export default function Home() {
     // Sanitiza o campo de data para enviar NULL ao invés de string vazia ""
     const dataToSave = {
       name: formData.name,
+      cpf: formData.cpf ? formData.cpf.replace(/\D/g, '') : '',
       origin: formData.origin,
       experiences_count: expCount,
       phone: combinedPhone,
@@ -138,6 +144,7 @@ export default function Home() {
       last_interaction: formData.last_interaction === '' ? null : formData.last_interaction,
       avisar: formData.avisar,
       remedio: formData.remedio || 'não informado',
+      medications_list: formData.medications_list || [],
       observations: formData.observations
     };
 
@@ -173,6 +180,7 @@ export default function Home() {
     setEditingContact(null);
     setFormData({ 
       name: '', 
+      cpf: '',
       origin: '', 
       experiences_count: 0, 
       phone: '', 
@@ -180,6 +188,7 @@ export default function Home() {
       last_interaction: '', 
       avisar: 'Sempre', 
       remedio: 'não informado',
+      medications_list: [],
       observations: '' 
     });
     setAvisarOption('Sempre');
@@ -328,6 +337,7 @@ export default function Home() {
     setEditingContact(contact);
     setFormData({
       name: contact.name || '',
+      cpf: contact.cpf || '',
       origin: contact.origin || '',
       experiences_count: contact.experiences_count || 0,
       phone: contact.phone || '',
@@ -335,6 +345,7 @@ export default function Home() {
       last_interaction: contact.last_interaction || '',
       avisar: contact.avisar || 'Sempre',
       remedio: contact.remedio || 'não informado',
+      medications_list: contact.medications_list || [],
       observations: contact.observations || ''
     });
 
@@ -662,6 +673,29 @@ export default function Home() {
               </div>
 
               <div className="form-group">
+                <label style={{ fontWeight: '600' }}>CPF</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  value={formData.cpf || ''}
+                  onChange={(e) => {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 11) value = value.slice(0, 11);
+                    
+                    if (value.length > 9) {
+                      value = `${value.slice(0, 3)}.${value.slice(3, 6)}.${value.slice(6, 9)}-${value.slice(9)}`;
+                    } else if (value.length > 6) {
+                      value = `${value.slice(0, 3)}.${value.slice(3, 6)}.${value.slice(6)}`;
+                    } else if (value.length > 3) {
+                      value = `${value.slice(0, 3)}.${value.slice(3)}`;
+                    }
+                    setFormData({...formData, cpf: value});
+                  }}
+                  placeholder="000.000.000-00"
+                />
+              </div>
+
+              <div className="form-group">
                 <label style={{ fontWeight: '600' }}>
                   Telefone <span style={{ color: '#ef5350' }}>*</span>
                 </label>
@@ -734,7 +768,7 @@ export default function Home() {
               )}
 
               <div className="form-group">
-                <label style={{ fontWeight: '600' }}>Remédio</label>
+                <label style={{ fontWeight: '600' }}>Remédio (Status Geral)</label>
                 <select 
                   className="form-control"
                   value={formData.remedio || 'não informado'}
@@ -745,6 +779,151 @@ export default function Home() {
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
+              </div>
+
+              {/* Lista Detalhada de Medicamentos com Inclusão Manual */}
+              <div style={{
+                marginTop: '1rem',
+                background: 'rgba(0,0,0,0.02)',
+                padding: '1rem',
+                borderRadius: '12px',
+                border: '1px solid rgba(0,0,0,0.05)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.8rem'
+              }}>
+                <label style={{ fontWeight: '600', display: 'block', fontSize: '0.9rem', color: 'var(--primary)', margin: 0 }}>
+                  Lista Detalhada de Remédios ({formData.medications_list?.length || 0})
+                </label>
+                
+                {formData.medications_list && formData.medications_list.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {formData.medications_list.map((med, idx) => (
+                      <div 
+                        key={idx} 
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          background: 'white',
+                          padding: '0.5rem 0.8rem',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(0,0,0,0.05)',
+                          fontSize: '0.8rem'
+                        }}
+                      >
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                          <span style={{ fontWeight: '600', color: 'var(--text)' }}>💊 {med.name}</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Dose: {med.dosage} | Freq: {med.frequency}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = formData.medications_list.filter((_, i) => i !== idx);
+                            setFormData({
+                              ...formData,
+                              medications_list: updated,
+                              remedio: updated.length === 0 ? 'não' : formData.remedio
+                            });
+                          }}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: '#ef5350',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            fontSize: '0.75rem',
+                            padding: '0.2rem 0.4rem',
+                            borderRadius: '4px'
+                          }}
+                          onMouseEnter={(e) => e.target.style.background = 'rgba(239, 83, 80, 0.1)'}
+                          onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                        >
+                          Remover
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, fontStyle: 'italic' }}>
+                    Nenhum medicamento detalhado cadastrado.
+                  </p>
+                )}
+
+                {/* Sub-form para Adicionar Medicamento Manualmente */}
+                <div style={{
+                  borderTop: '1px solid rgba(0,0,0,0.06)',
+                  marginTop: '0.4rem',
+                  paddingTop: '0.6rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem'
+                }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--primary)', display: 'block' }}>
+                    + Adicionar Remédio à Ficha
+                  </span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '0.4rem' }}>
+                    <input 
+                      type="text"
+                      className="form-control"
+                      placeholder="Nome do remédio"
+                      value={adminMedName}
+                      onChange={(e) => setAdminMedName(e.target.value)}
+                      style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem', height: '32px' }}
+                    />
+                    <input 
+                      type="text"
+                      className="form-control"
+                      placeholder="Dose (Ex: 50mg)"
+                      value={adminMedDosage}
+                      onChange={(e) => setAdminMedDosage(e.target.value)}
+                      style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem', height: '32px' }}
+                    />
+                    <input 
+                      type="text"
+                      className="form-control"
+                      placeholder="Freq (Ex: 1x/dia)"
+                      value={adminMedFreq}
+                      onChange={(e) => setAdminMedFreq(e.target.value)}
+                      style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem', height: '32px' }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!adminMedName.trim()) return;
+                      const newMed = {
+                        name: adminMedName.trim(),
+                        dosage: adminMedDosage.trim() || 'Não informada',
+                        frequency: adminMedFreq.trim() || 'Não informada'
+                      };
+                      const currentList = formData.medications_list || [];
+                      setFormData({
+                        ...formData,
+                        medications_list: [...currentList, newMed],
+                        remedio: 'em andamento' // Define automaticamente como "em andamento" para revisão
+                      });
+                      setAdminMedName('');
+                      setAdminMedDosage('');
+                      setAdminMedFreq('');
+                    }}
+                    style={{
+                      background: 'rgba(45, 74, 62, 0.1)',
+                      color: 'var(--primary)',
+                      border: '1px solid rgba(45, 74, 62, 0.2)',
+                      padding: '0.4rem',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.target.style.background = 'rgba(45, 74, 62, 0.18)'}
+                    onMouseLeave={(e) => e.target.style.background = 'rgba(45, 74, 62, 0.1)'}
+                  >
+                    Incluir na Ficha
+                  </button>
+                </div>
               </div>
 
               {/* Caixa de Primeira Experiência (Obrigatória, Sim por padrão) */}

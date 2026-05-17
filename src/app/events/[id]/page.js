@@ -13,6 +13,7 @@ export default function EventDetail({ params }) {
   const [loading, setLoading] = useState(true);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedContactIds, setSelectedContactIds] = useState(new Set());
+  const [activeRemedioSelect, setActiveRemedioSelect] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -142,15 +143,15 @@ export default function EventDetail({ params }) {
     }
   }
 
-  async function toggleRemedioOk(contactId, currentStatus) {
+  async function updateRemedioStatus(contactId, newStatus) {
     const { error } = await supabase
       .from('event_participants')
-      .update({ remedio_ok: !currentStatus })
+      .update({ remedio_status: newStatus })
       .match({ event_id: eventId, contact_id: contactId });
       
     if (!error) {
       setParticipants(prev => prev.map(p => 
-        p.contact_id === contactId ? { ...p, remedio_ok: !currentStatus } : p
+        p.contact_id === contactId ? { ...p, remedio_status: newStatus } : p
       ));
     }
   }
@@ -168,6 +169,19 @@ export default function EventDetail({ params }) {
     }
   }
 
+  async function updateVagaStatus(contactId, newStatus) {
+    const { error } = await supabase
+      .from('event_participants')
+      .update({ vaga: newStatus })
+      .match({ event_id: eventId, contact_id: contactId });
+      
+    if (!error) {
+      setParticipants(prev => prev.map(p => 
+        p.contact_id === contactId ? { ...p, vaga: newStatus } : p
+      ));
+    }
+  }
+
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push('/login');
@@ -177,6 +191,13 @@ export default function EventDetail({ params }) {
   if (!event) return <div style={{ textAlign: 'center', padding: '5rem' }}>Cerimônia não encontrada.</div>;
 
   const hasTwoDates = !!event.date2;
+
+  const remedioOptions = [
+    { value: 'não informado', label: 'Não informado', icon: '💊', color: '#bbb' },
+    { value: 'enviado', label: 'Enviado', icon: '📲', color: '#5dade2' },
+    { value: 'preenchido', label: 'Preenchido', icon: '📝', color: '#f39c12' },
+    { value: 'ok', label: 'OK', icon: '✅', color: '#27ae60' }
+  ];
 
   return (
     <div>
@@ -255,39 +276,90 @@ export default function EventDetail({ params }) {
           ) : (
             <div>
               {/* Header Titles */}
-              <div style={{ display: 'grid', gridTemplateColumns: '2.5fr 1.5fr 2fr 2fr 0.5fr', padding: '0 0 1rem 0', borderBottom: '2px solid #2d4a3e', fontWeight: 'bold', fontSize: '0.8rem', letterSpacing: '1.5px', textTransform: 'uppercase', fontFamily: 'sans-serif', color: '#2d4a3e' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.5fr 1fr 1fr 1.8fr 0.5fr', padding: '0 0 1rem 0', borderBottom: '2px solid #2d4a3e', fontWeight: 'bold', fontSize: '0.8rem', letterSpacing: '1.5px', textTransform: 'uppercase', fontFamily: 'sans-serif', color: '#2d4a3e' }}>
                 <div>Viajante</div>
-                <div>Dias Confirmados</div>
+                <div>Dias</div>
                 <div>Status</div>
-                <div>Sub-Status</div>
+                <div>Remédio</div>
+                <div>Pago</div>
+                <div>Vaga</div>
                 <div style={{ textAlign: 'right' }}>Ações</div>
               </div>
 
               {/* Items */}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 {participants.map((p) => {
-                  const isConfirmado = p.status === 'Confirmado';
+                  const hasRemedioAccess = p.status === 'intenção de ir' || p.status === 'Confirmado';
+                  
+                  // Obter o status atual do remédio
+                  const currentRemedio = remedioOptions.find(o => o.value === (p.remedio_status || 'não informado')) || remedioOptions[0];
+
+                  // Estilização e cálculo da vaga
+                  let badgeText = 'Livre';
+                  let badgeStyle = {
+                    background: 'rgba(0,0,0,0.04)',
+                    border: '1px dashed #ccc',
+                    color: '#888'
+                  };
+
+                  if (p.vaga === 'Comprometido') {
+                    badgeText = 'Comprometido';
+                    badgeStyle = {
+                      background: 'rgba(155, 89, 182, 0.1)',
+                      border: '1px solid rgba(155, 89, 182, 0.3)',
+                      color: '#7d3c98'
+                    };
+                  } else {
+                    const hasRemedioOk = p.remedio_status === 'ok';
+                    const hasRemedioPreenchidoOrOk = p.remedio_status === 'preenchido' || p.remedio_status === 'ok';
+                    const hasIntencaoOrHigher = p.status === 'intenção de ir' || p.status === 'Confirmado';
+                    const isConfirmado = p.status === 'Confirmado';
+
+                    if (hasRemedioOk && p.pago) {
+                      badgeText = 'Confirmado';
+                      badgeStyle = {
+                        background: 'rgba(46, 204, 113, 0.15)',
+                        border: '1px solid rgba(46, 204, 113, 0.4)',
+                        color: '#1e8449'
+                      };
+                    } else if (isConfirmado && hasRemedioPreenchidoOrOk) {
+                      badgeText = 'Confirmado';
+                      badgeStyle = {
+                        background: 'rgba(52, 152, 219, 0.15)',
+                        border: '1px solid rgba(52, 152, 219, 0.4)',
+                        color: '#2471a3'
+                      };
+                    } else if (hasIntencaoOrHigher && hasRemedioPreenchidoOrOk) {
+                      badgeText = 'Reservado';
+                      badgeStyle = {
+                        background: 'rgba(241, 196, 15, 0.15)',
+                        border: '1px solid rgba(241, 196, 15, 0.4)',
+                        color: '#b7950b'
+                      };
+                    }
+                  }
+
                   return (
-                    <div key={p.contact_id} style={{ display: 'grid', gridTemplateColumns: '2.5fr 1.5fr 2fr 2fr 0.5fr', alignItems: 'center', padding: '1.2rem 0', borderBottom: '1px solid #e5dfd3', transition: 'background-color 0.2s', opacity: p.status === 'desistiu' ? 0.4 : 1 }}>
-                      {/* 1. Name & Phone */}
+                    <div key={p.contact_id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.5fr 1fr 1fr 1.8fr 0.5fr', alignItems: 'center', padding: '1.2rem 0', borderBottom: '1px solid #e5dfd3', transition: 'background-color 0.2s', opacity: p.status === 'desistiu' ? 0.4 : 1 }}>
+                      {/* 1. Viajante (Nome & Telefone) */}
                       <div>
                         <div style={{ fontSize: '1.1rem', color: '#1a1a1a', fontWeight: '500' }}>{p.contacts?.name}</div>
                         <div style={{ fontSize: '0.75rem', color: '#888', letterSpacing: '0.5px', fontFamily: 'sans-serif', marginTop: '0.2rem' }}>{p.contacts?.phone || 'Sem telefone'}</div>
                       </div>
 
-                      {/* 2. Days Presence Toggles */}
-                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                         <button onClick={() => toggleDayPresence(p.contact_id, 1, p.date1_confirmed)} style={{ background: 'transparent', border: 'none', color: p.date1_confirmed ? '#2d4a3e' : '#bbb', fontStyle: 'italic', fontSize: '0.95rem', cursor: 'pointer', padding: 0, fontFamily: 'inherit', fontWeight: p.date1_confirmed ? 'bold' : 'normal' }} title="Alternar Dia I">
-                           {p.date1_confirmed ? 'Dia I' : <s>Dia I</s>}
+                      {/* 2. Dias Confirmados */}
+                      <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                         <button onClick={() => toggleDayPresence(p.contact_id, 1, p.date1_confirmed)} style={{ background: 'transparent', border: 'none', color: p.date1_confirmed ? '#2d4a3e' : '#bbb', fontStyle: 'italic', fontSize: '0.9rem', cursor: 'pointer', padding: 0, fontFamily: 'inherit', fontWeight: p.date1_confirmed ? 'bold' : 'normal' }} title="Alternar Dia I">
+                           {p.date1_confirmed ? 'D1' : <s>D1</s>}
                          </button>
                          {hasTwoDates && (
-                           <button onClick={() => toggleDayPresence(p.contact_id, 2, p.date2_confirmed)} style={{ background: 'transparent', border: 'none', color: p.date2_confirmed ? '#2d4a3e' : '#bbb', fontStyle: 'italic', fontSize: '0.95rem', cursor: 'pointer', padding: 0, fontFamily: 'inherit', fontWeight: p.date2_confirmed ? 'bold' : 'normal' }} title="Alternar Dia II">
-                             {p.date2_confirmed ? 'Dia II' : <s>Dia II</s>}
+                           <button onClick={() => toggleDayPresence(p.contact_id, 2, p.date2_confirmed)} style={{ background: 'transparent', border: 'none', color: p.date2_confirmed ? '#2d4a3e' : '#bbb', fontStyle: 'italic', fontSize: '0.9rem', cursor: 'pointer', padding: 0, fontFamily: 'inherit', fontWeight: p.date2_confirmed ? 'bold' : 'normal' }} title="Alternar Dia II">
+                             {p.date2_confirmed ? 'D2' : <s>D2</s>}
                            </button>
                          )}
                       </div>
 
-                      {/* 3. Status Dropdown */}
+                      {/* 3. Status da Cerimônia */}
                       <div>
                         <select 
                           value={p.status || 'Confirmado'} 
@@ -308,67 +380,165 @@ export default function EventDetail({ params }) {
                         >
                           <option value="avisar">Avisar</option>
                           <option value="avisado">Avisado</option>
-                          <option value="remédio informado">Remédio Informado</option>
                           <option value="intenção de ir">Intenção de ir</option>
                           <option value="Confirmado">Confirmado</option>
                           <option value="desistiu">Desistiu</option>
                         </select>
                       </div>
 
-                      {/* 4. Sub-Status (Remédio OK & Pago) - only for Confirmado */}
+                      {/* 4. Remédio Dropdown (Custom Popover) */}
                       <div>
-                        {isConfirmado ? (
-                          <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}>
-                            {/* Remédio OK Toggle */}
-                            <button 
-                              onClick={() => toggleRemedioOk(p.contact_id, p.remedio_ok)}
+                        {hasRemedioAccess ? (
+                          <div style={{ position: 'relative', display: 'inline-block' }}>
+                            <button
+                              onClick={() => setActiveRemedioSelect(activeRemedioSelect === p.contact_id ? null : p.contact_id)}
                               style={{
                                 background: 'transparent',
-                                border: 'none',
-                                cursor: 'pointer',
-                                padding: '0.2rem 0.5rem',
+                                border: '1px solid #d4cbb8',
                                 borderRadius: '4px',
+                                padding: '0.3rem 0.6rem',
+                                cursor: 'pointer',
+                                fontSize: '1.2rem',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.3rem',
-                                opacity: p.remedio_ok ? 1 : 0.3,
-                                transition: 'opacity 0.2s',
-                                fontSize: '0.85rem'
+                                gap: '0.4rem',
+                                transition: 'all 0.2s',
                               }}
-                              title={p.remedio_ok ? "Remédio OK!" : "Marcar Remédio OK"}
+                              title={`Status do Remédio: ${currentRemedio.label}`}
                             >
-                              <span style={{ fontSize: '1.1rem' }}>💊</span>
-                              <span style={{ fontSize: '0.75rem', fontFamily: 'sans-serif', textTransform: 'uppercase', letterSpacing: '1px', color: p.remedio_ok ? '#2d4a3e' : '#666', fontWeight: p.remedio_ok ? 'bold' : 'normal' }}>Ok</span>
+                              <span>{currentRemedio.icon}</span>
+                              <span style={{ fontSize: '0.6rem', color: '#888' }}>▼</span>
                             </button>
 
-                            {/* Pago! Toggle */}
-                            <button 
-                              onClick={() => togglePago(p.contact_id, p.pago)}
-                              style={{
-                                background: 'transparent',
-                                border: 'none',
-                                cursor: 'pointer',
-                                padding: '0.2rem 0.5rem',
-                                borderRadius: '4px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.3rem',
-                                opacity: p.pago ? 1 : 0.3,
-                                transition: 'opacity 0.2s',
-                                fontSize: '0.85rem'
-                              }}
-                              title={p.pago ? "Pago!" : "Marcar como Pago"}
-                            >
-                              <span style={{ fontSize: '1.1rem' }}>💰</span>
-                              <span style={{ fontSize: '0.75rem', fontFamily: 'sans-serif', textTransform: 'uppercase', letterSpacing: '1px', color: p.pago ? '#d4af37' : '#666', fontWeight: p.pago ? 'bold' : 'normal' }}>Pago</span>
-                            </button>
+                            {activeRemedioSelect === p.contact_id && (
+                              <>
+                                {/* Overlay para fechar popover no clique fora */}
+                                <div 
+                                  onClick={() => setActiveRemedioSelect(null)}
+                                  style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 998 }}
+                                />
+                                <div style={{
+                                  position: 'absolute',
+                                  top: '100%',
+                                  left: 0,
+                                  marginTop: '5px',
+                                  background: 'white',
+                                  border: '1px solid #d4cbb8',
+                                  borderRadius: '6px',
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                  zIndex: 999,
+                                  minWidth: '165px',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  padding: '0.4rem 0'
+                                }}>
+                                  {remedioOptions.map(opt => (
+                                    <button
+                                      key={opt.value}
+                                      onClick={() => {
+                                        updateRemedioStatus(p.contact_id, opt.value);
+                                        setActiveRemedioSelect(null);
+                                      }}
+                                      style={{
+                                        background: (p.remedio_status || 'não informado') === opt.value ? '#f5f3ef' : 'transparent',
+                                        border: 'none',
+                                        padding: '0.6rem 1rem',
+                                        textAlign: 'left',
+                                        cursor: 'pointer',
+                                        fontFamily: 'sans-serif',
+                                        fontSize: '0.85rem',
+                                        color: '#333',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.6rem',
+                                        width: '100%',
+                                        transition: 'background 0.2s'
+                                      }}
+                                      onMouseEnter={(e) => e.target.style.background = '#f5f3ef'}
+                                      onMouseLeave={(e) => {
+                                        if ((p.remedio_status || 'não informado') !== opt.value) {
+                                          e.target.style.background = 'transparent';
+                                        }
+                                      }}
+                                    >
+                                      <span style={{ fontSize: '1.1rem' }}>{opt.icon}</span>
+                                      <span>{opt.label}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </>
+                            )}
                           </div>
                         ) : (
                           <span style={{ color: '#ccc', fontStyle: 'italic', fontSize: '0.85rem' }}>Indisponível</span>
                         )}
                       </div>
 
-                      {/* 5. Actions (Remove) */}
+                      {/* 5. Pago Toggle */}
+                      <div>
+                        <button 
+                          onClick={() => togglePago(p.contact_id, p.pago)}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '0.2rem 0.5rem',
+                            borderRadius: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.3rem',
+                            opacity: p.pago ? 1 : 0.3,
+                            transition: 'opacity 0.2s',
+                            fontSize: '0.85rem'
+                          }}
+                          title={p.pago ? "Pago!" : "Marcar como Pago"}
+                        >
+                          <span style={{ fontSize: '1.25rem' }}>💰</span>
+                          <span style={{ fontSize: '0.75rem', fontFamily: 'sans-serif', textTransform: 'uppercase', letterSpacing: '1px', color: p.pago ? '#d4af37' : '#666', fontWeight: p.pago ? 'bold' : 'normal' }}> Pago</span>
+                        </button>
+                      </div>
+
+                      {/* 6. Status da Vaga */}
+                      <div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', alignItems: 'flex-start' }}>
+                          <select
+                            value={p.vaga || 'Automático'}
+                            onChange={(e) => updateVagaStatus(p.contact_id, e.target.value)}
+                            style={{
+                              background: 'transparent',
+                              border: '1px solid #d4cbb8',
+                              borderRadius: '4px',
+                              padding: '0.25rem 0.4rem',
+                              fontFamily: '"Lora", serif',
+                              fontStyle: 'italic',
+                              color: '#2d4a3e',
+                              fontSize: '0.8rem',
+                              cursor: 'pointer',
+                              outline: 'none',
+                              width: '90%'
+                            }}
+                          >
+                            <option value="Automático">Automático</option>
+                            <option value="Comprometido">Comprometido</option>
+                          </select>
+                          
+                          <div style={{
+                            display: 'inline-block',
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '12px',
+                            fontSize: '0.7rem',
+                            fontFamily: 'sans-serif',
+                            fontWeight: 'bold',
+                            letterSpacing: '0.5px',
+                            textTransform: 'uppercase',
+                            ...badgeStyle
+                          }}>
+                            {badgeText}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 7. Ações (Remover) */}
                       <div style={{ textAlign: 'right' }}>
                         <button onClick={() => removeParticipant(p.contact_id)} style={{ border: 'none', background: 'transparent', color: '#c00', fontSize: '1.4rem', cursor: 'pointer', opacity: 0.5, transition: 'opacity 0.2s' }} onMouseEnter={(e) => e.target.style.opacity = 1} onMouseLeave={(e) => e.target.style.opacity = 0.5} title="Remover da lista">
                           ×

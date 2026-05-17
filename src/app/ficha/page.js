@@ -132,12 +132,28 @@ export default function PublicFicha() {
 
     try {
       // 1. Verifica se já existe um contato com esse mesmo CPF
-      const { data: existingContacts, error: findError } = await supabase
+      const cleanCpf = cpf.replace(/\D/g, '');
+      let { data: existingContacts, error: findError } = await supabase
         .from('contacts')
-        .select('id, name, observations')
-        .eq('cpf', cpf.replace(/\D/g, ''));
+        .select('id, name, observations, cpf')
+        .eq('cpf', cleanCpf);
 
       if (findError) throw findError;
+
+      // Fallback: Se não encontrar por CPF, tenta encontrar por NOME exato (caso o contato no banco estivesse sem CPF)
+      if (!existingContacts || existingContacts.length === 0) {
+        const { data: byNameContacts, error: nameError } = await supabase
+          .from('contacts')
+          .select('id, name, observations, cpf')
+          .ilike('name', name.trim());
+        
+        if (nameError) throw nameError;
+        
+        if (byNameContacts && byNameContacts.length > 0) {
+          // Usa o contato por nome, contanto que o CPF dele esteja nulo/vazio ou coincida
+          existingContacts = byNameContacts.filter(c => !c.cpf || c.cpf === cleanCpf);
+        }
+      }
 
       if (existingContacts && existingContacts.length > 0) {
         // Atualiza contato existente
@@ -150,6 +166,7 @@ export default function PublicFicha() {
           .from('contacts')
           .update({
             name: name.trim(), // Atualiza caso tenha digitado diferente
+            cpf: cleanCpf,      // Salva o CPF no contato original caso estivesse vazio!
             remedio: remedioStatus,
             medications_list: medications,
             observations: updatedObs

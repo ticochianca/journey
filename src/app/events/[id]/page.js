@@ -160,103 +160,119 @@ export default function EventDetail({ params }) {
         </div>
       </nav>
 
-      <div className="container fade-in" style={{ paddingTop: '2rem' }}>
-        <header style={{ borderBottom: 'none', marginBottom: '1.5rem', paddingBottom: 0 }}>
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-            <Link href="/events" className="btn" style={{ background: '#eee', textDecoration: 'none' }}>
-              ⬅ Voltar às Cerimônias
-            </Link>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-            <div>
-              <h1 style={{ color: 'var(--primary)', marginBottom: '0.5rem', fontSize: '1.8rem', fontFamily: 'Georgia, serif' }}>{event.name}</h1>
-              <p style={{ color: 'var(--text-muted)' }}>
-                <strong>Data 1:</strong> {event.date ? new Date(event.date + 'T00:00:00').toLocaleDateString('pt-BR') : 'A definir'}
-                {event.date2 && <span> &nbsp;|&nbsp; <strong>Data 2:</strong> {new Date(event.date2 + 'T00:00:00').toLocaleDateString('pt-BR')}</span>}
-              </p>
-              {event.description && <p style={{ marginTop: '0.5rem', fontStyle: 'italic', color: '#555' }}>{event.description}</p>}
-            </div>
-            <button className="btn btn-primary" onClick={openImportModal}>
-              + Importar Viajantes
-            </button>
-          </div>
-        </header>
+      <div className="container fade-in" style={{ paddingTop: '2rem', paddingBottom: '3rem' }}>
+        <div style={{
+          display: 'flex',
+          width: '100%',
+          maxWidth: '1200px',
+          margin: '0 auto',
+          background: '#fdfbf7', // Ivory paper color
+          borderRadius: '8px',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.15), inset 0 0 10px rgba(0,0,0,0.05)',
+          position: 'relative',
+          minHeight: '75vh',
+          fontFamily: '"Lora", "Georgia", serif',
+          color: '#333'
+        }}>
+          {/* Spine Crease */}
+          <div style={{
+            position: 'absolute',
+            left: '50%',
+            top: 0,
+            bottom: 0,
+            width: '40px',
+            background: 'linear-gradient(to right, rgba(0,0,0,0.02), rgba(0,0,0,0.06) 50%, rgba(0,0,0,0.02))',
+            transform: 'translateX(-50%)',
+            borderLeft: '1px solid rgba(0,0,0,0.03)',
+            borderRight: '1px solid rgba(0,0,0,0.03)',
+            zIndex: 0
+          }}></div>
 
-      {participants.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Ninguém foi adicionado a esta cerimônia ainda.</p>
-          <button className="btn btn-primary" onClick={openImportModal}>Importar da Base</button>
-        </div>
-      ) : (
-        <div className="contact-list-view">
-          <div className="list-item" style={{ background: 'transparent', border: 'none', boxShadow: 'none', fontWeight: 'bold', color: 'var(--text-muted)' }}>
-            <div>Nome</div>
-            <div>Telefone</div>
-            <div>Dias Confirmados</div>
-            <div style={{ textAlign: 'right' }}>Ações</div>
-          </div>
-          {participants.map((p) => (
-            <div key={p.contact_id} className="list-item fade-in" style={{ opacity: (!p.date1_confirmed && !p.date2_confirmed) ? 0.5 : 1 }}>
-              <div style={{ fontWeight: '600' }}>{p.contacts?.name}</div>
-              <div>{p.contacts?.phone || '-'}</div>
-              <div>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <button 
-                    onClick={() => toggleDayPresence(p.contact_id, 1, p.date1_confirmed)}
-                    style={{ 
-                      border: 'none', 
-                      background: p.date1_confirmed ? '#4caf50' : '#e0e0e0', 
-                      color: p.date1_confirmed ? 'white' : '#888', 
-                      fontSize: '0.75rem', 
-                      padding: '0.3rem 0.8rem', 
-                      borderRadius: '12px', 
-                      cursor: 'pointer', 
-                      fontWeight: 'bold',
-                      transition: 'all 0.2s',
-                      boxShadow: p.date1_confirmed ? '0 2px 4px rgba(76,175,80,0.3)' : 'none'
-                    }}
-                    title="Alternar presença no Dia 1"
-                  >
-                    Dia 1
-                  </button>
-                  {hasTwoDates && (
-                    <button 
-                      onClick={() => toggleDayPresence(p.contact_id, 2, p.date2_confirmed)}
-                      style={{ 
-                        border: 'none', 
-                        background: p.date2_confirmed ? '#4caf50' : '#e0e0e0', 
-                        color: p.date2_confirmed ? 'white' : '#888', 
-                        fontSize: '0.75rem', 
-                        padding: '0.3rem 0.8rem', 
-                        borderRadius: '12px', 
-                        cursor: 'pointer', 
-                        fontWeight: 'bold',
-                        transition: 'all 0.2s',
-                        boxShadow: p.date2_confirmed ? '0 2px 4px rgba(76,175,80,0.3)' : 'none'
-                      }}
-                      title="Alternar presença no Dia 2"
-                    >
-                      Dia 2
-                    </button>
-                  )}
-                  {hasTwoDates && p.date1_confirmed && p.date2_confirmed && (
-                    <span style={{ fontSize: '0.75rem', color: '#388e3c', marginLeft: '8px', fontWeight: 'bold' }}>✓ Ambos</span>
-                  )}
+          {/* LEFT PAGE: Ceremony Header & Diary */}
+          <div style={{
+            flex: 1,
+            padding: '3rem 4rem',
+            borderRight: '1px solid #e5dfd3',
+            boxShadow: 'inset -20px 0 20px -20px rgba(0,0,0,0.15)', // Inner spine shadow
+            zIndex: 1
+          }}>
+            <Link href="/events" style={{ display: 'inline-block', marginBottom: '2rem', textDecoration: 'none', color: '#888', fontSize: '0.75rem', letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'sans-serif' }}>
+              ← Voltar às Cerimônias
+            </Link>
+            
+            <h1 style={{ fontSize: '2.5rem', color: '#1a1a1a', marginBottom: '1.5rem', fontWeight: 'normal' }}>
+              {event.name}
+            </h1>
+            
+            <div style={{ borderBottom: '1px solid #d4cbb8', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '0.9rem', color: '#555', fontStyle: 'italic', letterSpacing: '0.5px' }}>
+                <span style={{ fontFamily: 'sans-serif', fontWeight: 'bold', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2px', color: '#2d4a3e', marginRight: '0.5rem' }}>Dia I</span>
+                {event.date ? new Date(event.date + 'T00:00:00').toLocaleDateString('pt-BR') : 'Data pendente'}
+              </div>
+              {event.date2 && (
+                <div style={{ fontSize: '0.9rem', color: '#555', fontStyle: 'italic', letterSpacing: '0.5px', marginTop: '0.6rem' }}>
+                  <span style={{ fontFamily: 'sans-serif', fontWeight: 'bold', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2px', color: '#2d4a3e', marginRight: '0.5rem' }}>Dia II</span>
+                  {new Date(event.date2 + 'T00:00:00').toLocaleDateString('pt-BR')}
                 </div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <button 
-                  className="btn" 
-                  style={{ background: '#fee', color: '#c00', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                  onClick={() => removeParticipant(p.contact_id)}
-                >
-                  Remover
-                </button>
-              </div>
+              )}
             </div>
-          ))}
+            
+            {event.description ? (
+              <p style={{ color: '#444', lineHeight: '1.8', fontSize: '1.05rem', fontStyle: 'italic' }}>
+                {event.description}
+              </p>
+            ) : (
+              <p style={{ color: '#aaa', fontStyle: 'italic' }}>Nenhuma anotação de capa inserida.</p>
+            )}
+          </div>
+
+          {/* RIGHT PAGE: The Elegant Participant List */}
+          <div style={{
+            flex: 1,
+            padding: '3rem 4rem',
+            boxShadow: 'inset 20px 0 20px -20px rgba(0,0,0,0.15)', // Inner spine shadow
+            display: 'flex',
+            flexDirection: 'column',
+            zIndex: 1
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #d4cbb8', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
+               <h2 style={{ fontSize: '1.6rem', color: '#1a1a1a', margin: 0, fontWeight: 'normal' }}>Lista de Viajantes</h2>
+               <button onClick={openImportModal} style={{ background: 'transparent', border: '1px solid #2d4a3e', color: '#2d4a3e', padding: '0.4rem 1.2rem', borderRadius: '20px', fontSize: '0.7rem', letterSpacing: '1.5px', cursor: 'pointer', fontFamily: 'sans-serif', textTransform: 'uppercase', transition: 'all 0.3s' }} onMouseEnter={(e) => { e.target.style.background = '#2d4a3e'; e.target.style.color = '#fff'; }} onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#2d4a3e'; }}>
+                 + Adicionar
+               </button>
+            </div>
+            
+            {participants.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem 0' }}>
+                <p style={{ color: '#888', fontStyle: 'italic' }}>Página em branco. Nenhum viajante adicionado ainda.</p>
+              </div>
+            ) : (
+              <div style={{ flex: 1, overflowY: 'auto' }}>
+                {participants.map((p) => (
+                  <div key={p.contact_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.8rem 0', borderBottom: '1px dashed #e5dfd3', opacity: (!p.date1_confirmed && !p.date2_confirmed) ? 0.4 : 1, transition: 'opacity 0.3s' }}>
+                    <div>
+                      <div style={{ fontSize: '1.1rem', color: '#1a1a1a' }}>{p.contacts?.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#888', letterSpacing: '0.5px', fontFamily: 'sans-serif', marginTop: '0.2rem' }}>{p.contacts?.phone || 'Sem telefone'}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                       <button onClick={() => toggleDayPresence(p.contact_id, 1, p.date1_confirmed)} style={{ background: 'transparent', border: 'none', color: p.date1_confirmed ? '#2d4a3e' : '#bbb', fontStyle: 'italic', fontSize: '0.95rem', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }} title="Alternar Dia I">
+                         {p.date1_confirmed ? 'Dia I' : <s>Dia I</s>}
+                       </button>
+                       {hasTwoDates && (
+                         <button onClick={() => toggleDayPresence(p.contact_id, 2, p.date2_confirmed)} style={{ background: 'transparent', border: 'none', color: p.date2_confirmed ? '#2d4a3e' : '#bbb', fontStyle: 'italic', fontSize: '0.95rem', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }} title="Alternar Dia II">
+                           {p.date2_confirmed ? 'Dia II' : <s>Dia II</s>}
+                         </button>
+                       )}
+                       <button onClick={() => removeParticipant(p.contact_id)} style={{ border: 'none', background: 'transparent', color: '#c00', fontSize: '1.2rem', marginLeft: '0.5rem', cursor: 'pointer', opacity: 0.5, transition: 'opacity 0.2s' }} onMouseEnter={(e) => e.target.style.opacity = 1} onMouseLeave={(e) => e.target.style.opacity = 0.5} title="Remover da lista">
+                         ×
+                       </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      )}
       </div>
 
       {/* Modal de Importação */}

@@ -500,16 +500,14 @@ export default function EventDetail({ params }) {
 
                       {/* 6. Status da Vaga */}
                       <div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', alignItems: 'flex-start' }}>
-                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.8rem', fontFamily: 'sans-serif', color: '#666' }}>
-                            <input 
-                              type="checkbox"
-                              checked={p.vaga === 'Comprometido'}
-                              onChange={(e) => updateVagaStatus(p.contact_id, e.target.checked ? 'Comprometido' : 'Automático')}
-                              style={{ cursor: 'pointer', width: '14px', height: '14px' }}
-                            />
-                            <span>Forçar Comprometido</span>
-                          </label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                          <input 
+                            type="checkbox"
+                            checked={p.vaga === 'Comprometido'}
+                            onChange={(e) => updateVagaStatus(p.contact_id, e.target.checked ? 'Comprometido' : 'Automático')}
+                            style={{ cursor: 'pointer', width: '15px', height: '15px', accentColor: '#7d3c98' }}
+                            title="Forçar manual (Comprometido)"
+                          />
                           
                           <div style={{
                             display: 'inline-block',
@@ -520,7 +518,6 @@ export default function EventDetail({ params }) {
                             fontWeight: 'bold',
                             letterSpacing: '0.5px',
                             textTransform: 'uppercase',
-                            marginTop: '0.2rem',
                             ...badgeStyle
                           }}>
                             {badgeText}

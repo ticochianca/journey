@@ -14,6 +14,7 @@ export default function EventDetail({ params }) {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedContactIds, setSelectedContactIds] = useState(new Set());
   const [activeRemedioSelect, setActiveRemedioSelect] = useState(null);
+  const [activeFichaContact, setActiveFichaContact] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -193,10 +194,11 @@ export default function EventDetail({ params }) {
   const hasTwoDates = !!event.date2;
 
   const remedioOptions = [
-    { value: 'não informado', label: 'Não informado', icon: '💊', color: '#bbb' },
+    { value: 'enviar', label: 'Enviar', icon: '✉️', color: '#bbb' },
     { value: 'enviado', label: 'Enviado', icon: '📲', color: '#5dade2' },
     { value: 'preenchido', label: 'Preenchido', icon: '📝', color: '#f39c12' },
-    { value: 'ok', label: 'OK', icon: '✅', color: '#27ae60' }
+    { value: 'Ok', label: 'Ok', icon: '✅', color: '#27ae60' },
+    { value: 'Ok Manual', label: 'Ok Manual', icon: '🛡️', color: '#8e44ad' }
   ];
 
   return (
@@ -292,7 +294,7 @@ export default function EventDetail({ params }) {
                   const hasRemedioAccess = p.status === 'intenção de ir' || p.status === 'Confirmado';
                   
                   // Obter o status atual do remédio
-                  const currentRemedio = remedioOptions.find(o => o.value === (p.remedio_status || 'não informado')) || remedioOptions[0];
+                  const currentRemedio = remedioOptions.find(o => o.value === (p.remedio_status || 'enviar')) || remedioOptions[0];
 
                   // Estilização e cálculo da vaga
                   let badgeText = 'Livre';
@@ -310,8 +312,8 @@ export default function EventDetail({ params }) {
                       color: '#7d3c98'
                     };
                   } else {
-                    const hasRemedioOk = p.remedio_status === 'ok';
-                    const hasRemedioPreenchidoOrOk = p.remedio_status === 'preenchido' || p.remedio_status === 'ok';
+                    const hasRemedioOk = p.remedio_status === 'Ok' || p.remedio_status === 'Ok Manual';
+                    const hasRemedioPreenchidoOrOk = p.remedio_status === 'preenchido' || p.remedio_status === 'Ok' || p.remedio_status === 'Ok Manual';
                     const hasIntencaoOrHigher = p.status === 'intenção de ir' || p.status === 'Confirmado';
                     const isConfirmado = p.status === 'Confirmado';
 
@@ -389,85 +391,135 @@ export default function EventDetail({ params }) {
                       {/* 4. Remédio Dropdown (Custom Popover) */}
                       <div>
                         {hasRemedioAccess ? (
-                          <div style={{ position: 'relative', display: 'inline-block' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <div style={{ position: 'relative', display: 'inline-block' }}>
+                              <button
+                                onClick={() => setActiveRemedioSelect(activeRemedioSelect === p.contact_id ? null : p.contact_id)}
+                                style={{
+                                  background: 'transparent',
+                                  border: '1px solid #d4cbb8',
+                                  borderRadius: '4px',
+                                  padding: '0.3rem 0.5rem',
+                                  cursor: 'pointer',
+                                  fontSize: '1.1rem',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.3rem',
+                                  transition: 'all 0.2s',
+                                }}
+                                title={`Status do Remédio: ${currentRemedio.label}`}
+                              >
+                                <span>{currentRemedio.icon}</span>
+                                <span style={{ fontSize: '0.5rem', color: '#888' }}>▼</span>
+                              </button>
+
+                              {activeRemedioSelect === p.contact_id && (
+                                <>
+                                  {/* Overlay para fechar popover no clique fora */}
+                                  <div 
+                                    onClick={() => setActiveRemedioSelect(null)}
+                                    style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 998 }}
+                                  />
+                                  <div style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    left: 0,
+                                    marginTop: '5px',
+                                    background: 'white',
+                                    border: '1px solid #d4cbb8',
+                                    borderRadius: '6px',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                    zIndex: 999,
+                                    minWidth: '165px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    padding: '0.4rem 0'
+                                  }}>
+                                    {remedioOptions.map(opt => (
+                                      <button
+                                        key={opt.value}
+                                        onClick={() => {
+                                          updateRemedioStatus(p.contact_id, opt.value);
+                                          setActiveRemedioSelect(null);
+                                        }}
+                                        style={{
+                                          background: (p.remedio_status || 'enviar') === opt.value ? '#f5f3ef' : 'transparent',
+                                          border: 'none',
+                                          padding: '0.6rem 1rem',
+                                          textAlign: 'left',
+                                          cursor: 'pointer',
+                                          fontFamily: 'sans-serif',
+                                          fontSize: '0.85rem',
+                                          color: '#333',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '0.6rem',
+                                          width: '100%',
+                                          transition: 'background 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => e.target.style.background = '#f5f3ef'}
+                                        onMouseLeave={(e) => {
+                                          if ((p.remedio_status || 'enviar') !== opt.value) {
+                                            e.target.style.background = 'transparent';
+                                          }
+                                        }}
+                                      >
+                                        <span style={{ fontSize: '1.1rem' }}>{opt.icon}</span>
+                                        <span>{opt.label}</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </>
+                              )}
+                            </div>
+
+                            {/* WhatsApp Send Icon */}
                             <button
-                              onClick={() => setActiveRemedioSelect(activeRemedioSelect === p.contact_id ? null : p.contact_id)}
-                              style={{
-                                background: 'transparent',
-                                border: '1px solid #d4cbb8',
-                                borderRadius: '4px',
-                                padding: '0.3rem 0.6rem',
-                                cursor: 'pointer',
-                                fontSize: '1.2rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.4rem',
-                                transition: 'all 0.2s',
+                              onClick={() => {
+                                const cleanPhone = p.contacts?.phone?.replace(/\D/g, '') || '';
+                                if (!cleanPhone) {
+                                  alert('Este viajante não tem telefone cadastrado para o envio da ficha.');
+                                  return;
+                                }
+                                const publicLink = `${window.location.origin}/ficha?nome=${encodeURIComponent(p.contacts?.name || '')}`;
+                                const firstName = p.contacts?.name?.split(' ')[0] || '';
+                                const message = `Oi, ${firstName}! Por favor, preenche algumas informações sobre remédios que você está tomando.\n\nAlguns remédios interferem na experiência, ou mesmo inviabilizam ela.\n\nLink seguro para preenchimento: ${publicLink}`;
+                                window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`, '_blank');
+                                
+                                // Auto update status to "enviado"
+                                updateRemedioStatus(p.contact_id, 'enviado');
                               }}
-                              title={`Status do Remédio: ${currentRemedio.label}`}
+                              style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.1rem', opacity: 0.75 }}
+                              title="Enviar ficha por WhatsApp (Muda status para Enviado)"
                             >
-                              <span>{currentRemedio.icon}</span>
-                              <span style={{ fontSize: '0.6rem', color: '#888' }}>▼</span>
+                              📲
                             </button>
 
-                            {activeRemedioSelect === p.contact_id && (
-                              <>
-                                {/* Overlay para fechar popover no clique fora */}
-                                <div 
-                                  onClick={() => setActiveRemedioSelect(null)}
-                                  style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 998 }}
-                                />
-                                <div style={{
-                                  position: 'absolute',
-                                  top: '100%',
-                                  left: 0,
-                                  marginTop: '5px',
-                                  background: 'white',
-                                  border: '1px solid #d4cbb8',
-                                  borderRadius: '6px',
-                                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                                  zIndex: 999,
-                                  minWidth: '165px',
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  padding: '0.4rem 0'
-                                }}>
-                                  {remedioOptions.map(opt => (
-                                    <button
-                                      key={opt.value}
-                                      onClick={() => {
-                                        updateRemedioStatus(p.contact_id, opt.value);
-                                        setActiveRemedioSelect(null);
-                                      }}
-                                      style={{
-                                        background: (p.remedio_status || 'não informado') === opt.value ? '#f5f3ef' : 'transparent',
-                                        border: 'none',
-                                        padding: '0.6rem 1rem',
-                                        textAlign: 'left',
-                                        cursor: 'pointer',
-                                        fontFamily: 'sans-serif',
-                                        fontSize: '0.85rem',
-                                        color: '#333',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.6rem',
-                                        width: '100%',
-                                        transition: 'background 0.2s'
-                                      }}
-                                      onMouseEnter={(e) => e.target.style.background = '#f5f3ef'}
-                                      onMouseLeave={(e) => {
-                                        if ((p.remedio_status || 'não informado') !== opt.value) {
-                                          e.target.style.background = 'transparent';
-                                        }
-                                      }}
-                                    >
-                                      <span style={{ fontSize: '1.1rem' }}>{opt.icon}</span>
-                                      <span>{opt.label}</span>
-                                    </button>
-                                  ))}
-                                </div>
-                              </>
-                            )}
+                            {/* Copy Link Icon */}
+                            <button
+                              onClick={() => {
+                                const publicLink = `${window.location.origin}/ficha?nome=${encodeURIComponent(p.contacts?.name || '')}`;
+                                navigator.clipboard.writeText(publicLink);
+                                alert('Link da ficha copiado para a área de transferência!');
+                              }}
+                              style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.1rem', opacity: 0.75 }}
+                              title="Copiar Link da Ficha Pública"
+                            >
+                              🔗
+                            </button>
+
+                            {/* View Ficha Icon */}
+                            <button
+                              onClick={() => {
+                                if (p.contacts) {
+                                  setActiveFichaContact(p.contacts);
+                                }
+                              }}
+                              style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.15rem', opacity: 0.75 }}
+                              title="Ver Ficha / Arquivo do Viajante"
+                            >
+                              👁️
+                            </button>
                           </div>
                         ) : (
                           <span style={{ color: '#ccc', fontStyle: 'italic', fontSize: '0.85rem' }}>Indisponível</span>
@@ -596,6 +648,80 @@ export default function EventDetail({ params }) {
                 onClick={() => setIsImportModalOpen(false)}
               >
                 Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeFichaContact && (
+        <div className="modal-overlay" style={{ zIndex: 1000 }}>
+          <div className="modal-content" style={{ maxWidth: '500px', padding: '2.5rem', fontFamily: '"Lora", serif', color: '#333', background: '#fdfbf7', border: '1px solid #d4cbb8', borderRadius: '8px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: 'normal', color: '#1a1a1a', borderBottom: '1px solid #d4cbb8', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+              Ficha Médica: {activeFichaContact.name}
+            </h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', fontSize: '0.95rem' }}>
+              {activeFichaContact.cpf && (
+                <div>
+                  <strong style={{ fontFamily: 'sans-serif', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px', color: '#2d4a3e' }}>CPF:</strong>
+                  <span style={{ marginLeft: '0.5rem' }}>{activeFichaContact.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}</span>
+                </div>
+              )}
+
+              <div>
+                <strong style={{ fontFamily: 'sans-serif', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px', color: '#2d4a3e' }}>Remédios Informados:</strong>
+                {activeFichaContact.medications_list && activeFichaContact.medications_list.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginTop: '0.5rem', paddingLeft: '0.5rem' }}>
+                    {activeFichaContact.medications_list.map((med, idx) => (
+                      <div key={idx} style={{ padding: '0.5rem 0.8rem', background: 'rgba(45, 74, 62, 0.05)', borderRadius: '6px', borderLeft: '3px solid #2d4a3e' }}>
+                        <div style={{ fontWeight: 'bold' }}>{med.name}</div>
+                        {med.frequency && <div style={{ fontSize: '0.8rem', color: '#666', fontStyle: 'italic', marginTop: '0.2rem' }}>Frequência: {med.frequency}</div>}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ marginTop: '0.3rem', fontStyle: 'italic', color: '#888' }}>
+                    Nenhum remédio de uso contínuo informado (declarou não tomar remédios).
+                  </div>
+                )}
+              </div>
+
+              {activeFichaContact.observations && (
+                <div>
+                  <strong style={{ fontFamily: 'sans-serif', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px', color: '#2d4a3e' }}>Observações:</strong>
+                  <p style={{ margin: '0.3rem 0 0 0', fontStyle: 'italic', color: '#555', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+                    {activeFichaContact.observations}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginTop: '2.5rem', display: 'flex', gap: '1rem' }}>
+              <button 
+                onClick={() => {
+                  const cleanPhone = activeFichaContact.phone?.replace(/\D/g, '') || '';
+                  if (!cleanPhone) {
+                    alert('Este viajante não tem telefone cadastrado para o envio da ficha.');
+                    return;
+                  }
+                  const publicLink = `${window.location.origin}/ficha?nome=${encodeURIComponent(activeFichaContact.name || '')}`;
+                  const firstName = activeFichaContact.name?.split(' ')[0] || '';
+                  const message = `Oi, ${firstName}! Por favor, preenche algumas informações sobre remédios que você está tomando.\n\nAlguns remédios interferem na experiência, ou mesmo inviabilizam ela.\n\nLink seguro para preenchimento: ${publicLink}`;
+                  window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`, '_blank');
+                }}
+                className="btn"
+                style={{ background: 'transparent', border: '1px solid #2d4a3e', color: '#2d4a3e', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer' }}
+              >
+                <span>📲 WhatsApp</span>
+              </button>
+
+              <button 
+                onClick={() => setActiveFichaContact(null)} 
+                className="btn btn-primary"
+                style={{ background: '#2d4a3e', border: 'none', padding: '0.6rem 1.8rem', color: 'white', cursor: 'pointer', borderRadius: '4px', flex: 1 }}
+              >
+                Fechar Ficha
               </button>
             </div>
           </div>

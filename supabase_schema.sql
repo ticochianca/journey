@@ -39,6 +39,7 @@ create table events (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   name text not null,
   date date,
+  date2 date,
   description text
 );
 
@@ -47,6 +48,8 @@ create table event_participants (
   event_id uuid references events(id) on delete cascade,
   contact_id uuid references contacts(id) on delete cascade,
   status text default 'Confirmado',
+  date1_confirmed boolean default true,
+  date2_confirmed boolean default true,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   primary key (event_id, contact_id)
 );

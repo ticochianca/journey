@@ -501,26 +501,15 @@ export default function EventDetail({ params }) {
                       {/* 6. Status da Vaga */}
                       <div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', alignItems: 'flex-start' }}>
-                          <select
-                            value={p.vaga || 'Automático'}
-                            onChange={(e) => updateVagaStatus(p.contact_id, e.target.value)}
-                            style={{
-                              background: 'transparent',
-                              border: '1px solid #d4cbb8',
-                              borderRadius: '4px',
-                              padding: '0.25rem 0.4rem',
-                              fontFamily: '"Lora", serif',
-                              fontStyle: 'italic',
-                              color: '#2d4a3e',
-                              fontSize: '0.8rem',
-                              cursor: 'pointer',
-                              outline: 'none',
-                              width: '90%'
-                            }}
-                          >
-                            <option value="Automático">Automático</option>
-                            <option value="Comprometido">Comprometido</option>
-                          </select>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.8rem', fontFamily: 'sans-serif', color: '#666' }}>
+                            <input 
+                              type="checkbox"
+                              checked={p.vaga === 'Comprometido'}
+                              onChange={(e) => updateVagaStatus(p.contact_id, e.target.checked ? 'Comprometido' : 'Automático')}
+                              style={{ cursor: 'pointer', width: '14px', height: '14px' }}
+                            />
+                            <span>Forçar Comprometido</span>
+                          </label>
                           
                           <div style={{
                             display: 'inline-block',
@@ -531,6 +520,7 @@ export default function EventDetail({ params }) {
                             fontWeight: 'bold',
                             letterSpacing: '0.5px',
                             textTransform: 'uppercase',
+                            marginTop: '0.2rem',
                             ...badgeStyle
                           }}>
                             {badgeText}

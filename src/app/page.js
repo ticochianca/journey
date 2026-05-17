@@ -298,7 +298,7 @@ export default function Home() {
           const cleanPhone = contact.phone.replace(/\D/g, '');
           const firstName = contact.name.split(' ')[0];
           const publicLink = `${window.location.origin}/ficha?nome=${encodeURIComponent(contact.name)}`;
-          const message = `Olá, ${firstName}! Por favor, preencha sua ficha médica e terapêutica para a nossa jornada através do link seguro a seguir: ${publicLink}`;
+          const message = `Olá, ${firstName}! Por favor, preenche algumas informações sobre remédios que você está tomando.\n\nAlguns remédios interferem na experiência, ou mesmo inviabilizam ela.\n\nLink seguro para preenchimento: ${publicLink}`;
           
           window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`, '_blank');
         } else {

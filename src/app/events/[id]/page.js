@@ -139,6 +139,49 @@ export default function EventDetail({ params }) {
 
   const hasTwoDates = !!event.date2;
 
+  return (
+    <div>
+      {/* Barra de Navegação Premium Sticky no Topo */}
+      <nav className="navbar">
+        <a href="/" className="navbar-brand" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+          Journey<span style={{ color: 'var(--accent)' }}>.</span>
+        </a>
+        <div className="navbar-menu">
+          <a href="/" className="navbar-link">👥 Pessoas</a>
+          <a href="/events" className="navbar-link active">🎪 Cerimônias</a>
+          <a href="/settings/statuses" className="navbar-link">⚙️ Status</a>
+          <button 
+            className="btn" 
+            style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', marginLeft: '1rem', padding: '0.4rem 0.8rem', cursor: 'pointer' }}
+            onClick={handleLogout}
+          >
+            Sair
+          </button>
+        </div>
+      </nav>
+
+      <div className="container fade-in" style={{ paddingTop: '2rem' }}>
+        <header style={{ borderBottom: 'none', marginBottom: '1.5rem', paddingBottom: 0 }}>
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+            <Link href="/events" className="btn" style={{ background: '#eee', textDecoration: 'none' }}>
+              ⬅ Voltar às Cerimônias
+            </Link>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+            <div>
+              <h1 style={{ color: 'var(--primary)', marginBottom: '0.5rem', fontSize: '1.8rem', fontFamily: 'Georgia, serif' }}>{event.name}</h1>
+              <p style={{ color: 'var(--text-muted)' }}>
+                <strong>Data 1:</strong> {event.date ? new Date(event.date + 'T00:00:00').toLocaleDateString('pt-BR') : 'A definir'}
+                {event.date2 && <span> &nbsp;|&nbsp; <strong>Data 2:</strong> {new Date(event.date2 + 'T00:00:00').toLocaleDateString('pt-BR')}</span>}
+              </p>
+              {event.description && <p style={{ marginTop: '0.5rem', fontStyle: 'italic', color: '#555' }}>{event.description}</p>}
+            </div>
+            <button className="btn btn-primary" onClick={openImportModal}>
+              + Importar Viajantes
+            </button>
+          </div>
+        </header>
+
       {participants.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
           <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Ninguém foi adicionado a esta cerimônia ainda.</p>

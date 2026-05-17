@@ -116,84 +116,100 @@ export default function Events() {
           {events.map((event) => (
             <div key={event.id} style={{
               position: 'relative',
-              background: '#2b2d42', // Darker elegant leather color
-              borderRadius: '4px 12px 12px 4px',
-              boxShadow: 'inset -2px 0 5px rgba(0,0,0,0.2), 5px 5px 15px rgba(0,0,0,0.3)',
-              padding: '1.5rem',
+              background: '#1c1c1c', // Moleskine black cover
+              borderRadius: '3px 12px 12px 3px',
+              boxShadow: 'inset -2px 0 5px rgba(0,0,0,0.4), 4px 4px 10px rgba(0,0,0,0.5)',
+              padding: '0',
               cursor: 'pointer',
               minHeight: '220px',
               display: 'flex',
               flexDirection: 'column',
-              overflow: 'hidden',
+              overflow: 'visible', // To allow ribbon to peek out
               transition: 'transform 0.2s, box-shadow 0.2s',
+              borderLeft: '4px solid #111', // Spine hinge
+              marginTop: '10px' // For the ribbon shadow
             }}
             onClick={() => router.push(`/events/${event.id}`)}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = 'inset -2px 0 5px rgba(0,0,0,0.2), 8px 8px 20px rgba(0,0,0,0.4)';
+              e.currentTarget.style.boxShadow = 'inset -2px 0 5px rgba(0,0,0,0.4), 8px 8px 15px rgba(0,0,0,0.6)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'inset -2px 0 5px rgba(0,0,0,0.2), 5px 5px 15px rgba(0,0,0,0.3)';
+              e.currentTarget.style.boxShadow = 'inset -2px 0 5px rgba(0,0,0,0.4), 4px 4px 10px rgba(0,0,0,0.5)';
             }}
             >
-              {/* Spine binding effect */}
+              {/* Spine Groove */}
               <div style={{
                 position: 'absolute',
-                left: 0,
+                left: '8px',
                 top: 0,
                 bottom: 0,
-                width: '14px',
-                background: 'linear-gradient(to right, rgba(255,255,255,0.05), rgba(0,0,0,0.3), rgba(255,255,255,0.02))',
-                borderRight: '1px solid rgba(0,0,0,0.6)',
+                width: '3px',
+                background: 'rgba(0,0,0,0.6)',
+                boxShadow: '1px 0 2px rgba(255,255,255,0.05)',
               }}></div>
               
-              {/* Elastic band */}
+              {/* Elastic Band */}
               <div style={{
                 position: 'absolute',
-                right: '20px',
-                top: 0,
-                bottom: 0,
-                width: '10px',
-                background: '#1a1a1a',
-                boxShadow: '1px 0 3px rgba(0,0,0,0.6), -1px 0 2px rgba(255,255,255,0.05)',
-                zIndex: 2,
+                right: '18px',
+                top: '-1px',
+                bottom: '-1px',
+                width: '12px',
+                background: '#222',
+                boxShadow: 'inset 0 0 4px rgba(0,0,0,0.8), -2px 0 4px rgba(0,0,0,0.4)',
+                borderRadius: '1px',
+                zIndex: 10,
               }}></div>
 
-              {/* Moleskine Paper Label */}
+              {/* Red Ribbon Bookmark */}
               <div style={{
-                marginLeft: '15px',
-                background: '#f4eed7', // Paper color
+                position: 'absolute',
+                bottom: '-15px',
+                left: '40px',
+                width: '14px',
+                height: '40px',
+                background: '#8B0000',
+                borderBottomLeftRadius: '2px',
+                borderBottomRightRadius: '2px',
+                boxShadow: '2px 2px 4px rgba(0,0,0,0.4)',
+                zIndex: 1,
+              }}></div>
+
+              {/* Moleskine Paper Label (Sticker) */}
+              <div style={{
+                margin: '35px 45px 35px 25px', // Space for elastic, ribbon, and spine
+                background: '#f4ecd8', // Ivory paper
                 color: '#333',
                 padding: '1.2rem',
                 borderRadius: '2px',
-                boxShadow: '1px 1px 4px rgba(0,0,0,0.4)',
+                boxShadow: 'inset 0 0 10px rgba(200,180,150,0.1), 1px 1px 3px rgba(0,0,0,0.4)',
                 flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'relative',
-                zIndex: 1,
-                paddingRight: '30px', // Space for elastic band
-                fontFamily: 'Georgia, serif' // Gives that notebook feel
+                zIndex: 5,
+                fontFamily: '"Times New Roman", Times, serif'
               }}>
-                 <h3 style={{ margin: '0 0 0.8rem 0', fontSize: '1.4rem', color: '#1a1a1a', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
+                 <h3 style={{ margin: '0 0 0.8rem 0', fontSize: '1.5rem', color: '#1a1a1a', borderBottom: '1px solid #c2b59b', paddingBottom: '0.4rem', fontWeight: 'bold' }}>
                    {event.name}
                  </h3>
                  
-                 <div style={{ fontSize: '0.85rem', color: '#555', marginBottom: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                   <div>📅 <strong>Dia 1:</strong> {event.date ? new Date(event.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : 'A definir'}</div>
+                 <div style={{ fontSize: '0.8rem', color: '#555', marginBottom: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                   <div><strong>D1:</strong> {event.date ? new Date(event.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : 'A definir'}</div>
                    {event.date2 && (
-                     <div>📅 <strong>Dia 2:</strong> {new Date(event.date2).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</div>
+                     <div><strong>D2:</strong> {new Date(event.date2).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</div>
                    )}
                  </div>
 
-                 <p style={{ flex: 1, fontSize: '0.9rem', fontStyle: 'italic', margin: 0, color: '#666', lineHeight: '1.4' }}>
-                   {event.description || 'Sem anotações de capa.'}
+                 <p style={{ flex: 1, fontSize: '0.85rem', fontStyle: 'italic', margin: 0, color: '#444', lineHeight: '1.4' }}>
+                   {event.description || 'Diário de Bordo'}
                  </p>
                  
-                 <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-start' }}>
-                    <span style={{ background: '#2d4a3e', color: 'white', padding: '0.3rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold', fontFamily: 'sans-serif' }}>
-                      {event.event_participants?.[0]?.count || 0} Viajantes
+                 <div style={{ marginTop: '0.8rem', textAlign: 'right' }}>
+                    <span style={{ color: '#8B0000', fontSize: '0.75rem', fontWeight: 'bold', fontFamily: 'sans-serif', letterSpacing: '1px' }}>
+                      {event.event_participants?.[0]?.count || 0} PASSAPORTES
                     </span>
                  </div>
               </div>

@@ -232,6 +232,25 @@ export default function PublicFicha() {
               </p>
             </div>
 
+            {name && (
+              <div className="fade-in" style={{
+                background: 'rgba(102, 187, 106, 0.08)',
+                border: '1px solid rgba(102, 187, 106, 0.2)',
+                borderRadius: '16px',
+                padding: '1rem',
+                marginBottom: '1.5rem',
+                textAlign: 'center',
+                boxShadow: '0 4px 15px rgba(102, 187, 106, 0.05)'
+              }}>
+                <span style={{ fontSize: '1.2rem', fontWeight: '700', color: '#81c784', display: 'block', marginBottom: '0.2rem' }}>
+                  Oi, {name.split(' ')[0]}! 👋
+                </span>
+                <span style={{ fontSize: '0.82rem', color: '#cbd5e0', lineHeight: '1.4', display: 'block' }}>
+                  Preparamos este espaço seguro para você preencher seus medicamentos. Por favor, revise e confirme seus dados completos abaixo.
+                </span>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               
               {/* Nome Completo */}

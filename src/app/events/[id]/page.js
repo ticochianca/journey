@@ -293,8 +293,22 @@ export default function EventDetail({ params }) {
                 {participants.map((p) => {
                   const hasRemedioAccess = p.status === 'intenção de ir' || p.status === 'Confirmado';
                   
+                  // Resolução dinâmica do status do remédio com base no preenchimento real da Ficha
+                  let effectiveRemedioStatus = p.remedio_status || 'enviar';
+                  if (p.remedio_status !== 'Ok Manual') {
+                    if (p.contacts?.remedio === 'não') {
+                      effectiveRemedioStatus = 'Ok';
+                    } else if (p.contacts?.remedio === 'em andamento' || (p.contacts?.medications_list && p.contacts.medications_list.length > 0)) {
+                      effectiveRemedioStatus = 'preenchido';
+                    } else if (p.remedio_status === 'enviado') {
+                      effectiveRemedioStatus = 'enviado';
+                    } else {
+                      effectiveRemedioStatus = 'enviar';
+                    }
+                  }
+
                   // Obter o status atual do remédio
-                  const currentRemedio = remedioOptions.find(o => o.value === (p.remedio_status || 'enviar')) || remedioOptions[0];
+                  const currentRemedio = remedioOptions.find(o => o.value === effectiveRemedioStatus) || remedioOptions[0];
 
                   // Estilização e cálculo da vaga
                   let badgeText = 'Livre';
@@ -312,8 +326,8 @@ export default function EventDetail({ params }) {
                       color: '#7d3c98'
                     };
                   } else {
-                    const hasRemedioOk = p.remedio_status === 'Ok' || p.remedio_status === 'Ok Manual';
-                    const hasRemedioPreenchidoOrOk = p.remedio_status === 'preenchido' || p.remedio_status === 'Ok' || p.remedio_status === 'Ok Manual';
+                    const hasRemedioOk = effectiveRemedioStatus === 'Ok' || effectiveRemedioStatus === 'Ok Manual';
+                    const hasRemedioPreenchidoOrOk = effectiveRemedioStatus === 'preenchido' || effectiveRemedioStatus === 'Ok' || effectiveRemedioStatus === 'Ok Manual';
                     const hasIntencaoOrHigher = p.status === 'intenção de ir' || p.status === 'Confirmado';
                     const isConfirmado = p.status === 'Confirmado';
 
@@ -430,44 +444,87 @@ export default function EventDetail({ params }) {
                                     borderRadius: '6px',
                                     boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                                     zIndex: 999,
-                                    minWidth: '165px',
+                                    minWidth: '185px',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     padding: '0.4rem 0'
                                   }}>
-                                    {remedioOptions.map(opt => (
+                                    {/* Exibir o status atual apenas como informação */}
+                                    <div style={{
+                                      padding: '0.6rem 1rem',
+                                      fontFamily: 'sans-serif',
+                                      fontSize: '0.75rem',
+                                      color: '#888',
+                                      borderBottom: '1px solid #eee',
+                                      marginBottom: '0.2rem',
+                                      textTransform: 'uppercase',
+                                      letterSpacing: '0.5px'
+                                    }}>
+                                      Status: {currentRemedio.label}
+                                    </div>
+
+                                    {/* Opção de forçar o Ok Manual */}
+                                    <button
+                                      onClick={() => {
+                                        updateRemedioStatus(p.contact_id, 'Ok Manual');
+                                        setActiveRemedioSelect(null);
+                                      }}
+                                      style={{
+                                        background: p.remedio_status === 'Ok Manual' ? '#f5f3ef' : 'transparent',
+                                        border: 'none',
+                                        padding: '0.6rem 1rem',
+                                        textAlign: 'left',
+                                        cursor: 'pointer',
+                                        fontFamily: 'sans-serif',
+                                        fontSize: '0.85rem',
+                                        color: '#333',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.6rem',
+                                        width: '100%',
+                                        transition: 'background 0.2s'
+                                      }}
+                                      onMouseEnter={(e) => e.target.style.background = '#f5f3ef'}
+                                      onMouseLeave={(e) => {
+                                        if (p.remedio_status !== 'Ok Manual') {
+                                          e.target.style.background = 'transparent';
+                                        }
+                                      }}
+                                    >
+                                      <span style={{ fontSize: '1.1rem' }}>🛡️</span>
+                                      <span>Ok Manual</span>
+                                    </button>
+
+                                    {/* Opção de reverter para o fluxo automático */}
+                                    {p.remedio_status === 'Ok Manual' && (
                                       <button
-                                        key={opt.value}
                                         onClick={() => {
-                                          updateRemedioStatus(p.contact_id, opt.value);
+                                          updateRemedioStatus(p.contact_id, 'enviar');
                                           setActiveRemedioSelect(null);
                                         }}
                                         style={{
-                                          background: (p.remedio_status || 'enviar') === opt.value ? '#f5f3ef' : 'transparent',
+                                          background: 'transparent',
                                           border: 'none',
                                           padding: '0.6rem 1rem',
                                           textAlign: 'left',
                                           cursor: 'pointer',
                                           fontFamily: 'sans-serif',
                                           fontSize: '0.85rem',
-                                          color: '#333',
+                                          color: '#c0392b',
                                           display: 'flex',
                                           alignItems: 'center',
                                           gap: '0.6rem',
                                           width: '100%',
-                                          transition: 'background 0.2s'
+                                          transition: 'background 0.2s',
+                                          borderTop: '1px dashed #eee'
                                         }}
-                                        onMouseEnter={(e) => e.target.style.background = '#f5f3ef'}
-                                        onMouseLeave={(e) => {
-                                          if ((p.remedio_status || 'enviar') !== opt.value) {
-                                            e.target.style.background = 'transparent';
-                                          }
-                                        }}
+                                        onMouseEnter={(e) => e.target.style.background = '#fadbd8'}
+                                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
                                       >
-                                        <span style={{ fontSize: '1.1rem' }}>{opt.icon}</span>
-                                        <span>{opt.label}</span>
+                                        <span style={{ fontSize: '1.1rem' }}>🔄</span>
+                                        <span>Voltar ao Automático</span>
                                       </button>
-                                    ))}
+                                    )}
                                   </div>
                                 </>
                               )}

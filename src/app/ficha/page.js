@@ -41,6 +41,16 @@ const MEDICATIONS_DATABASE = [
 export default function PublicFicha() {
   const [name, setName] = useState('');
   const [cpf, setCpf] = useState('');
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const nameParam = params.get('nome');
+      if (nameParam) {
+        setName(nameParam);
+      }
+    }
+  }, []);
   const [medications, setMedications] = useState([]);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);

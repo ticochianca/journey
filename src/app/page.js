@@ -75,6 +75,7 @@ export default function Home() {
     if (r === 'ok') return '✅';
     if (r === 'em andamento') return '⏳';
     if (r === 'não') return '🚫';
+    if (r === 'enviando link') return '🔗';
     return '❓';
   };
 
@@ -274,7 +275,8 @@ export default function Home() {
     { value: 'não informado', label: '❓ Não informado' },
     { value: 'ok', label: '✅ Ok' },
     { value: 'em andamento', label: '⏳ Em andamento' },
-    { value: 'não', label: '🚫 Não' }
+    { value: 'não', label: '🚫 Não' },
+    { value: 'enviando link', label: '🔗 Enviando link' }
   ];
 
   async function handleRemedioChange(contactId, newRemedio) {
@@ -288,6 +290,21 @@ export default function Home() {
     } else {
       // Atualização imediata no estado local
       setContacts(prev => prev.map(c => c.id === contactId ? { ...c, remedio: newRemedio } : c));
+
+      // Se for "enviando link", abre o WhatsApp com o link dinâmico preenchido!
+      if (newRemedio === 'enviando link') {
+        const contact = contacts.find(c => c.id === contactId);
+        if (contact && contact.phone) {
+          const cleanPhone = contact.phone.replace(/\D/g, '');
+          const firstName = contact.name.split(' ')[0];
+          const publicLink = `${window.location.origin}/ficha?nome=${encodeURIComponent(contact.name)}`;
+          const message = `Olá, ${firstName}! Por favor, preencha sua ficha médica e terapêutica para a nossa jornada através do link seguro a seguir: ${publicLink}`;
+          
+          window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`, '_blank');
+        } else {
+          alert('Este viajante não tem telefone cadastrado para o envio da ficha.');
+        }
+      }
     }
   }
 
@@ -323,6 +340,12 @@ export default function Home() {
         ...baseStyle,
         background: 'rgba(239, 83, 80, 0.1)',
         color: '#ef5350'
+      };
+    } else if (val === 'enviando link') {
+      return {
+        ...baseStyle,
+        background: 'rgba(66, 165, 245, 0.1)',
+        color: '#42a5f5'
       };
     } else {
       return {

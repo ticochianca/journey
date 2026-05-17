@@ -41,12 +41,57 @@ const MEDICATIONS_DATABASE = [
 export default function PublicFicha() {
   const [name, setName] = useState('');
   const [cpf, setCpf] = useState('');
+  const [phone, setPhone] = useState('');
+  const [contactId, setContactId] = useState(null);
+  const [isGenericLink, setIsGenericLink] = useState(true);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const nameParam = params.get('nome');
-      if (nameParam) {
+      const idParam = params.get('id');
+
+      if (idParam) {
+        // Carrega dados do contato a partir do id do banco de dados!
+        const loadContact = async () => {
+          const { data, error } = await supabase
+            .from('contacts')
+            .select('name, cpf, phone')
+            .eq('id', idParam)
+            .single();
+
+          if (data && !error) {
+            setName(data.name || '');
+            setContactId(idParam);
+            setIsGenericLink(false);
+            
+            // Se já tiver telefone cadastrado, formata e preenche
+            if (data.phone) {
+              let clean = data.phone.replace(/\D/g, '');
+              if (clean.length > 2) {
+                if (clean.length > 10) {
+                  setPhone(`(${clean.slice(0,2)}) ${clean.slice(2,7)}-${clean.slice(7)}`);
+                } else if (clean.length > 6) {
+                  setPhone(`(${clean.slice(0,2)}) ${clean.slice(2,6)}-${clean.slice(6)}`);
+                } else {
+                  setPhone(`(${clean.slice(0,2)}) ${clean.slice(2)}`);
+                }
+              } else {
+                setPhone(data.phone);
+              }
+            }
+            if (data.cpf) {
+              let clean = data.cpf.replace(/\D/g, '');
+              if (clean.length > 9) {
+                setCpf(`${clean.slice(0,3)}.${clean.slice(3,6)}.${clean.slice(6,9)}-${clean.slice(9)}`);
+              } else {
+                setCpf(data.cpf);
+              }
+            }
+          }
+        };
+        loadContact();
+      } else if (nameParam) {
         setName(nameParam);
       }
     }
@@ -74,6 +119,23 @@ export default function PublicFicha() {
       value = `${value.slice(0, 3)}.${value.slice(3)}`;
     }
     setCpf(value);
+  };
+
+  // Formata Telefone em tempo real
+  const handlePhoneChange = (e) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 11) value = value.slice(0, 11);
+    
+    if (value.length > 10) {
+      value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+    } else if (value.length > 6) {
+      value = `(${value.slice(0, 2)}) ${value.slice(2, 6)}-${value.slice(6)}`;
+    } else if (value.length > 2) {
+      value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+    } else if (value.length > 0) {
+      value = `(${value.slice(0, 2)}`;
+    }
+    setPhone(value);
   };
 
   // Sugestões de autocomplete de remédio
@@ -118,69 +180,123 @@ export default function PublicFicha() {
   // Submit da Ficha Médica
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim() || !cpf.trim()) {
+    
+    const cleanCpf = cpf.replace(/\D/g, '');
+    const cleanPhone = phone.replace(/\D/g, '');
+
+    if (!name.trim() || !cleanCpf) {
       alert('Por favor, preencha os campos obrigatórios (Nome e CPF).');
+      return;
+    }
+
+    if (isGenericLink && !cleanPhone) {
+      alert('Por favor, preencha o seu Telefone.');
       return;
     }
 
     setLoading(true);
 
-    // O status do remédio para o administrador será:
-    // - 'em andamento' caso tome algum remédio (precisa de revisão)
-    // - 'não' caso informe que não toma nenhum
     const remedioStatus = medications.length > 0 ? 'em andamento' : 'não';
 
     try {
-      // 1. Verifica se já existe um contato com esse mesmo CPF
-      const cleanCpf = cpf.replace(/\D/g, '');
-      let { data: existingContacts, error: findError } = await supabase
-        .from('contacts')
-        .select('id, name, observations, cpf')
-        .eq('cpf', cleanCpf);
+      let matchedContactId = null;
+      let existingObs = '';
 
-      if (findError) throw findError;
-
-      // Fallback: Se não encontrar por CPF, tenta encontrar por NOME exato (caso o contato no banco estivesse sem CPF)
-      if (!existingContacts || existingContacts.length === 0) {
-        const { data: byNameContacts, error: nameError } = await supabase
+      if (contactId) {
+        // Caminho 1: Temos o ID específico do contato via URL
+        matchedContactId = contactId;
+        const { data: c } = await supabase.from('contacts').select('observations').eq('id', contactId).single();
+        if (c) existingObs = c.observations || '';
+      } else {
+        // Caminho 2: Link Genérico. Cruzamento inteligente de dados!
+        // 1. Tenta cruzar pelo Telefone
+        let { data: phoneMatches } = await supabase
           .from('contacts')
-          .select('id, name, observations, cpf')
-          .ilike('name', name.trim());
-        
-        if (nameError) throw nameError;
-        
-        if (byNameContacts && byNameContacts.length > 0) {
-          // Usa o contato por nome, contanto que o CPF dele esteja nulo/vazio ou coincida
-          existingContacts = byNameContacts.filter(c => !c.cpf || c.cpf === cleanCpf);
+          .select('id, name, observations, cpf, phone')
+          .eq('phone', cleanPhone);
+
+        if (phoneMatches && phoneMatches.length > 0) {
+          matchedContactId = phoneMatches[0].id;
+          existingObs = phoneMatches[0].observations || '';
+        } else {
+          // Fallback: busca pelo telefone parcial (ex: últimos 9 ou 8 dígitos)
+          const last9Digits = cleanPhone.slice(-9);
+          if (last9Digits.length >= 8) {
+            let { data: partialPhoneMatches } = await supabase
+              .from('contacts')
+              .select('id, name, observations, cpf, phone')
+              .ilike('phone', `%${last9Digits}%`);
+            
+            if (partialPhoneMatches && partialPhoneMatches.length > 0) {
+              matchedContactId = partialPhoneMatches[0].id;
+              existingObs = partialPhoneMatches[0].observations || '';
+            }
+          }
+        }
+
+        // 2. Se não cruzou por telefone, tenta cruzar por CPF
+        if (!matchedContactId) {
+          let { data: cpfMatches } = await supabase
+            .from('contacts')
+            .select('id, name, observations, cpf')
+            .eq('cpf', cleanCpf);
+
+          if (cpfMatches && cpfMatches.length > 0) {
+            matchedContactId = cpfMatches[0].id;
+            existingObs = cpfMatches[0].observations || '';
+          }
+        }
+
+        // 3. Se ainda não cruzou, tenta cruzar por Nome Exato
+        if (!matchedContactId) {
+          let { data: nameMatches } = await supabase
+            .from('contacts')
+            .select('id, name, observations, cpf, phone')
+            .ilike('name', name.trim());
+
+          if (nameMatches && nameMatches.length > 0) {
+            const filtered = nameMatches.filter(c => !c.cpf || c.cpf === cleanCpf);
+            if (filtered.length > 0) {
+              matchedContactId = filtered[0].id;
+              existingObs = filtered[0].observations || '';
+            }
+          }
         }
       }
 
-      if (existingContacts && existingContacts.length > 0) {
+      if (matchedContactId) {
         // Atualiza contato existente
-        const contact = existingContacts[0];
-        const updatedObs = contact.observations 
-          ? `${contact.observations}\n\n[Ficha Médica preenchida online via link público]` 
-          : '[Ficha Médica preenchida online via link público]';
+        const updatedObs = existingObs 
+          ? `${existingObs}\n\n[Ficha Médica preenchida online via link ${contactId ? 'exclusivo' : 'genérico'}]` 
+          : `[Ficha Médica preenchida online via link ${contactId ? 'exclusivo' : 'genérico'}]`;
+
+        const updatePayload = {
+          name: name.trim(),
+          cpf: cleanCpf,
+          remedio: remedioStatus,
+          medications_list: medications,
+          observations: updatedObs
+        };
+
+        // Se for link genérico e cruzou com o contato, também salvamos/atualizamos o Telefone dele
+        if (!contactId && cleanPhone) {
+          updatePayload.phone = phone; // Mantém com máscara para exibição visual
+        }
 
         const { error: updateError } = await supabase
           .from('contacts')
-          .update({
-            name: name.trim(), // Atualiza caso tenha digitado diferente
-            cpf: cleanCpf,      // Salva o CPF no contato original caso estivesse vazio!
-            remedio: remedioStatus,
-            medications_list: medications,
-            observations: updatedObs
-          })
-          .eq('id', contact.id);
+          .update(updatePayload)
+          .eq('id', matchedContactId);
 
         if (updateError) throw updateError;
       } else {
-        // Cria um novo contato no banco
+        // Caminho 3: Não cruzou com nenhum contato existente, cria um novo!
         const { error: insertError } = await supabase
           .from('contacts')
           .insert([{
             name: name.trim(),
-            cpf: cpf.replace(/\D/g, ''),
+            cpf: cleanCpf,
+            phone: phone, // Com máscara
             remedio: remedioStatus,
             medications_list: medications,
             status: 'Prospecto',
@@ -319,6 +435,34 @@ export default function PublicFicha() {
                   }}
                   onFocus={(e) => e.target.style.borderColor = '#66bb6a'}
                   onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                />
+              </div>
+
+              {/* Telefone / WhatsApp */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#cbd5e0' }}>
+                  Telefone / WhatsApp {isGenericLink && <span style={{ color: '#ef5350' }}>*</span>}
+                </label>
+                <input 
+                  type="text" 
+                  required={isGenericLink}
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  disabled={!isGenericLink}
+                  placeholder="(00) 00000-0000"
+                  style={{
+                    background: isGenericLink ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px',
+                    padding: '0.75rem 1rem',
+                    fontSize: '0.95rem',
+                    color: isGenericLink ? '#ffffff' : '#888',
+                    outline: 'none',
+                    transition: 'border-color 0.2s',
+                    cursor: isGenericLink ? 'text' : 'not-allowed'
+                  }}
+                  onFocus={(e) => { if (isGenericLink) e.target.style.borderColor = '#66bb6a'; }}
+                  onBlur={(e) => { if (isGenericLink) e.target.style.borderColor = 'rgba(255,255,255,0.1)'; }}
                 />
               </div>
 

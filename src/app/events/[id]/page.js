@@ -264,9 +264,25 @@ export default function EventDetail({ params }) {
               )}
             </div>
             
-            <button onClick={openImportModal} style={{ background: 'transparent', border: '1px solid #2d4a3e', color: '#2d4a3e', padding: '0.5rem 1.5rem', borderRadius: '20px', fontSize: '0.75rem', letterSpacing: '1.5px', cursor: 'pointer', fontFamily: 'sans-serif', textTransform: 'uppercase', transition: 'all 0.3s' }} onMouseEnter={(e) => { e.target.style.background = '#2d4a3e'; e.target.style.color = '#fff'; }} onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#2d4a3e'; }}>
-              + Adicionar Viajantes
-            </button>
+            <div style={{ display: 'flex', gap: '0.8rem', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <button onClick={openImportModal} style={{ background: 'transparent', border: '1px solid #2d4a3e', color: '#2d4a3e', padding: '0.5rem 1.5rem', borderRadius: '20px', fontSize: '0.75rem', letterSpacing: '1.5px', cursor: 'pointer', fontFamily: 'sans-serif', textTransform: 'uppercase', transition: 'all 0.3s', width: '100%', textAlign: 'center' }} onMouseEnter={(e) => { e.target.style.background = '#2d4a3e'; e.target.style.color = '#fff'; }} onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#2d4a3e'; }}>
+                + Adicionar Viajantes
+              </button>
+
+              <button 
+                onClick={() => {
+                  const genericLink = `${window.location.origin}/ficha`;
+                  navigator.clipboard.writeText(genericLink);
+                  alert('Link genérico da Ficha copiado com sucesso!');
+                }}
+                style={{ background: 'transparent', border: '1px solid #d4cbb8', color: '#555', padding: '0.5rem 1.5rem', borderRadius: '20px', fontSize: '0.72rem', letterSpacing: '1px', cursor: 'pointer', fontFamily: 'sans-serif', textTransform: 'uppercase', transition: 'all 0.3s', display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'center', width: '100%' }}
+                onMouseEnter={(e) => { e.target.style.background = '#f5f3ef'; }}
+                onMouseLeave={(e) => { e.target.style.background = 'transparent'; }}
+                title="Copiar link genérico do formulário médico para enviar a qualquer viajante"
+              >
+                <span>🔗 Link Genérico Ficha</span>
+              </button>
+            </div>
           </div>
 
           {/* Participant list layout */}
@@ -538,7 +554,7 @@ export default function EventDetail({ params }) {
                                   alert('Este viajante não tem telefone cadastrado para o envio da ficha.');
                                   return;
                                 }
-                                const publicLink = `${window.location.origin}/ficha?nome=${encodeURIComponent(p.contacts?.name || '')}`;
+                                const publicLink = `${window.location.origin}/ficha?id=${p.contact_id}`;
                                 const firstName = p.contacts?.name?.split(' ')[0] || '';
                                 const message = `Oi, ${firstName}! Por favor, preenche algumas informações sobre remédios que você está tomando.\n\nAlguns remédios interferem na experiência, ou mesmo inviabilizam ela.\n\nLink seguro para preenchimento: ${publicLink}`;
                                 window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`, '_blank');
@@ -555,7 +571,7 @@ export default function EventDetail({ params }) {
                             {/* Copy Link Icon */}
                             <button
                               onClick={() => {
-                                const publicLink = `${window.location.origin}/ficha?nome=${encodeURIComponent(p.contacts?.name || '')}`;
+                                const publicLink = `${window.location.origin}/ficha?id=${p.contact_id}`;
                                 navigator.clipboard.writeText(publicLink);
                                 alert('Link da ficha copiado para a área de transferência!');
                               }}
@@ -762,7 +778,7 @@ export default function EventDetail({ params }) {
                     alert('Este viajante não tem telefone cadastrado para o envio da ficha.');
                     return;
                   }
-                  const publicLink = `${window.location.origin}/ficha?nome=${encodeURIComponent(activeFichaContact.name || '')}`;
+                  const publicLink = `${window.location.origin}/ficha?id=${activeFichaContact.id}`;
                   const firstName = activeFichaContact.name?.split(' ')[0] || '';
                   const message = `Oi, ${firstName}! Por favor, preenche algumas informações sobre remédios que você está tomando.\n\nAlguns remédios interferem na experiência, ou mesmo inviabilizam ela.\n\nLink seguro para preenchimento: ${publicLink}`;
                   window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`, '_blank');

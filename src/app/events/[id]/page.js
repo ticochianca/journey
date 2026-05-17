@@ -393,29 +393,80 @@ export default function EventDetail({ params }) {
 
                       {/* 3. Status da Cerimônia */}
                       <div>
-                        <select 
-                          value={p.status || 'Confirmado'} 
-                          onChange={(e) => updateParticipantStatus(p.contact_id, e.target.value)}
-                          style={{
-                            background: 'transparent',
-                            border: '1px solid #d4cbb8',
-                            borderRadius: '4px',
-                            padding: '0.35rem 0.6rem',
-                            fontFamily: '"Lora", serif',
-                            fontStyle: 'italic',
-                            color: '#2d4a3e',
-                            fontSize: '0.9rem',
-                            cursor: 'pointer',
-                            outline: 'none',
-                            width: '90%'
-                          }}
-                        >
-                          <option value="avisar">Avisar</option>
-                          <option value="avisado">Avisado</option>
-                          <option value="intenção de ir">Intenção de ir</option>
-                          <option value="Confirmado">Confirmado</option>
-                          <option value="desistiu">Desistiu</option>
-                        </select>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                          {[
+                            { value: 'avisar', label: 'Avisar', icon: '📢' },
+                            { value: 'avisado', label: 'Avisado', icon: '📲' },
+                            { value: 'intenção de ir', label: 'Intenção de ir', icon: '👣' },
+                            { value: 'Confirmado', label: 'Confirmado', icon: '✅' },
+                            { value: 'desistiu', label: 'Desistiu', icon: '❌' }
+                          ].map((step, idx) => {
+                            const isDesistiuActive = p.status === 'desistiu';
+                            
+                            let isLit = false;
+                            if (step.value === 'desistiu') {
+                              isLit = isDesistiuActive;
+                            } else {
+                              if (isDesistiuActive) {
+                                isLit = false;
+                              } else {
+                                const currentPipelineIndex = ['avisar', 'avisado', 'intenção de ir', 'Confirmado'].indexOf(p.status || 'Confirmado');
+                                isLit = idx <= currentPipelineIndex;
+                              }
+                            }
+
+                            const opacity = isLit ? 1 : 0.22;
+                            const scale = isLit ? 'scale(1.15)' : 'scale(0.9)';
+                            const filter = isLit ? 'none' : 'grayscale(100%)';
+                            
+                            const isActiveStatus = p.status === step.value;
+                            const background = isActiveStatus 
+                              ? (step.value === 'desistiu' ? 'rgba(231, 76, 60, 0.12)' : 'rgba(45, 74, 62, 0.08)')
+                              : 'transparent';
+                            const border = isActiveStatus
+                              ? (step.value === 'desistiu' ? '1px solid rgba(231, 76, 60, 0.4)' : '1px solid rgba(45, 74, 62, 0.3)')
+                              : '1px solid transparent';
+
+                            return (
+                              <button
+                                key={step.value}
+                                onClick={() => updateParticipantStatus(p.contact_id, step.value)}
+                                style={{
+                                  background,
+                                  border,
+                                  borderRadius: '50%',
+                                  width: '26px',
+                                  height: '26px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                                  opacity,
+                                  transform: scale,
+                                  filter,
+                                  fontSize: '0.95rem',
+                                  padding: 0,
+                                  outline: 'none',
+                                  boxSizing: 'border-box'
+                                }}
+                                title={step.label}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1.3)';
+                                  e.currentTarget.style.opacity = '1';
+                                  e.currentTarget.style.filter = 'none';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = scale;
+                                  e.currentTarget.style.opacity = opacity;
+                                  e.currentTarget.style.filter = filter;
+                                }}
+                              >
+                                {step.icon}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
 
                       {/* 4. Remédio Dropdown (Custom Popover) */}

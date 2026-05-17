@@ -429,8 +429,23 @@ export default function EventDetail({ params }) {
 
                             return (
                               <button
-                                key={step.value}
-                                onClick={() => updateParticipantStatus(p.contact_id, step.value)}
+                                onClick={() => {
+                                  if (p.status === step.value) {
+                                    // Se clicar no status ativo, desliga ele regredindo ao status anterior
+                                    if (step.value === 'Confirmado') {
+                                      updateParticipantStatus(p.contact_id, 'intenção de ir');
+                                    } else if (step.value === 'intenção de ir') {
+                                      updateParticipantStatus(p.contact_id, 'avisado');
+                                    } else if (step.value === 'avisado') {
+                                      updateParticipantStatus(p.contact_id, 'avisar');
+                                    } else if (step.value === 'desistiu') {
+                                      updateParticipantStatus(p.contact_id, 'Confirmado');
+                                    }
+                                  } else {
+                                    // Se clicou em um diferente, ativa normalmente
+                                    updateParticipantStatus(p.contact_id, step.value);
+                                  }
+                                }}
                                 style={{
                                   background,
                                   border,

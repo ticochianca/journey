@@ -50,6 +50,8 @@ create table event_participants (
   status text default 'Confirmado',
   date1_confirmed boolean default true,
   date2_confirmed boolean default true,
+  remedio_ok boolean default false,
+  pago boolean default false,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   primary key (event_id, contact_id)
 );

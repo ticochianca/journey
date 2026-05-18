@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -377,7 +377,7 @@ export default function EventDetail({ params }) {
                 const rowOpacity = p.status === 'desistiu' ? 0.4 : 1;
 
                 return (
-                  <React.Fragment key={p.contact_id}>
+                  <Fragment key={p.contact_id}>
                     {/* 1. Viajante (Nome & Telefone) */}
                     <div style={{ borderBottom: '1px solid #e5dfd3', padding: '1.2rem 0', opacity: rowOpacity, transition: 'opacity 0.2s' }}>
                       <div style={{ fontSize: '1.1rem', color: '#1a1a1a', fontWeight: '500' }}>{p.contacts?.name}</div>
@@ -728,7 +728,7 @@ export default function EventDetail({ params }) {
                         ×
                       </button>
                     </div>
-                  </React.Fragment>
+                  </Fragment>
                 );
               })}
             </div>

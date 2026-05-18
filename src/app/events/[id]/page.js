@@ -207,6 +207,8 @@ export default function EventDetail({ params }) {
 
   const renderParticipantRow = (p) => {
     const hasRemedioAccess = p.status === 'intenção de ir' || p.status === 'Confirmado';
+    const isSemNada = p.status === 'avisado' || p.status === 'desistiu' || p.status === 'avisar';
+    const cellOpacity = isSemNada ? 0.08 : 1;
     
     // Resolução dinâmica do status do remédio com base no preenchimento real da Ficha
     let effectiveRemedioStatus = p.remedio_status || 'enviar';
@@ -281,7 +283,19 @@ export default function EventDetail({ params }) {
         </div>
 
         {/* 2. Dias Confirmados */}
-        <div style={{ borderBottom: '1px solid #e5dfd3', padding: '1.2rem 0', opacity: rowOpacity, transition: 'opacity 0.2s', display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+        <div 
+          style={{ 
+            borderBottom: '1px solid #e5dfd3', 
+            padding: '1.2rem 0', 
+            opacity: rowOpacity * cellOpacity, 
+            transition: 'opacity 0.25s ease-in-out', 
+            display: 'flex', 
+            gap: '0.8rem', 
+            alignItems: 'center' 
+          }}
+          onMouseEnter={(e) => { if (isSemNada) e.currentTarget.style.opacity = 1; }}
+          onMouseLeave={(e) => { if (isSemNada) e.currentTarget.style.opacity = 0.08; }}
+        >
            <button onClick={() => toggleDayPresence(p.contact_id, 1, p.date1_confirmed)} style={{ background: 'transparent', border: 'none', color: p.date1_confirmed ? '#2d4a3e' : '#bbb', fontStyle: 'italic', fontSize: '0.9rem', cursor: 'pointer', padding: 0, fontFamily: 'inherit', fontWeight: p.date1_confirmed ? 'bold' : 'normal' }} title="Alternar Dia I">
              {p.date1_confirmed ? 'D1' : <s>D1</s>}
            </button>
@@ -316,7 +330,7 @@ export default function EventDetail({ params }) {
                 }
               }
 
-              const opacity = isLit ? 1 : 0.25;
+              const opacity = isLit ? 1 : 0.08;
               const scale = 'scale(1)'; // Escala base idêntica para alinhamento perfeito sem variações!
               const filter = isLit ? 'none' : 'grayscale(100%)';
               
@@ -561,12 +575,21 @@ export default function EventDetail({ params }) {
               </button>
             </div>
           ) : (
-            <span style={{ color: '#ccc', fontStyle: 'italic', fontSize: '0.85rem' }}>Indisponível</span>
+            <span style={{ color: '#d4cbb8', fontSize: '1.1rem', paddingLeft: '0.4rem', opacity: 0.4 }}>—</span>
           )}
         </div>
 
         {/* 5. Pago Toggle */}
-        <div style={{ borderBottom: '1px solid #e5dfd3', padding: '1.2rem 0', opacity: rowOpacity, transition: 'opacity 0.2s' }}>
+        <div 
+          style={{ 
+            borderBottom: '1px solid #e5dfd3', 
+            padding: '1.2rem 0', 
+            opacity: rowOpacity * cellOpacity, 
+            transition: 'opacity 0.25s ease-in-out' 
+          }}
+          onMouseEnter={(e) => { if (isSemNada) e.currentTarget.style.opacity = 1; }}
+          onMouseLeave={(e) => { if (isSemNada) e.currentTarget.style.opacity = 0.08; }}
+        >
           <button 
             onClick={() => togglePago(p.contact_id, p.pago)}
             style={{
@@ -590,7 +613,16 @@ export default function EventDetail({ params }) {
         </div>
 
         {/* 6. Status da Vaga */}
-        <div style={{ borderBottom: '1px solid #e5dfd3', padding: '1.2rem 0', opacity: rowOpacity, transition: 'opacity 0.2s' }}>
+        <div 
+          style={{ 
+            borderBottom: '1px solid #e5dfd3', 
+            padding: '1.2rem 0', 
+            opacity: rowOpacity * cellOpacity, 
+            transition: 'opacity 0.25s ease-in-out' 
+          }}
+          onMouseEnter={(e) => { if (isSemNada) e.currentTarget.style.opacity = 1; }}
+          onMouseLeave={(e) => { if (isSemNada) e.currentTarget.style.opacity = 0.08; }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <input 
               type="checkbox"

@@ -44,6 +44,10 @@ export default function PublicFicha() {
   const [phone, setPhone] = useState('');
   const [contactId, setContactId] = useState(null);
   const [isGenericLink, setIsGenericLink] = useState(true);
+  
+  // Novos estados adicionados
+  const [observations, setObservations] = useState('');
+  const [declarationChecked, setDeclarationChecked] = useState(false);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -96,6 +100,7 @@ export default function PublicFicha() {
       }
     }
   }, []);
+
   const [medications, setMedications] = useState([]);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -194,6 +199,11 @@ export default function PublicFicha() {
       return;
     }
 
+    if (!declarationChecked) {
+      alert('Você precisa declarar a veracidade das informações fornecidas marcando o campo de declaração.');
+      return;
+    }
+
     setLoading(true);
 
     const remedioStatus = medications.length > 0 ? 'em andamento' : 'não';
@@ -264,11 +274,18 @@ export default function PublicFicha() {
         }
       }
 
+      // Preparando as observações preenchidas
+      let medicalNote = `[Ficha Médica preenchida online via link ${contactId ? 'exclusivo' : 'genérico'}]`;
+      if (observations.trim()) {
+        medicalNote += `\nObservações/Terapias Alternativas: ${observations.trim()}`;
+      }
+      medicalNote += `\nDeclaração: Aceita e declarada como verdadeira em ${new Date().toLocaleDateString('pt-BR')}.`;
+
       if (matchedContactId) {
         // Atualiza contato existente
         const updatedObs = existingObs 
-          ? `${existingObs}\n\n[Ficha Médica preenchida online via link ${contactId ? 'exclusivo' : 'genérico'}]` 
-          : `[Ficha Médica preenchida online via link ${contactId ? 'exclusivo' : 'genérico'}]`;
+          ? `${existingObs}\n\n${medicalNote}` 
+          : medicalNote;
 
         const updatePayload = {
           name: name.trim(),
@@ -301,7 +318,8 @@ export default function PublicFicha() {
             medications_list: medications,
             status: 'Prospecto',
             avisar: 'Sempre',
-            experiences_count: 0
+            experiences_count: 0,
+            observations: medicalNote
           }]);
 
         if (insertError) throw insertError;
@@ -318,104 +336,121 @@ export default function PublicFicha() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #1b2e26 0%, #0d1612 100%)',
+      background: '#f6f4f0', // Tom claro elegante de papel de linho (Aesthetic Premium)
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '2rem 1rem',
+      padding: '3rem 1rem',
       fontFamily: 'system-ui, -apple-system, sans-serif',
-      color: '#e2e8f0'
+      color: '#3a413d'
     }}>
       <div style={{
-        background: 'rgba(255, 255, 255, 0.03)',
-        backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: '24px',
-        padding: '2.5rem',
+        background: '#ffffff',
+        border: '1px solid #d4cbb8', // Borda sutil de tom areia premium
+        borderRadius: '20px',
+        padding: '3rem',
         width: '100%',
-        maxWidth: '560px',
-        boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+        maxWidth: '580px',
+        boxShadow: '0 16px 40px rgba(139, 126, 102, 0.08)',
       }}>
         {submitted ? (
           <div style={{ textAlign: 'center', padding: '2rem 0' }}>
             <div style={{
-              fontSize: '4.5rem',
-              color: '#66bb6a',
+              fontSize: '4rem',
+              color: '#2d4a3e',
               marginBottom: '1.5rem',
-              animation: 'scaleUp 0.5s ease'
             }}>
               ✓
             </div>
-            <h2 style={{ color: '#ffffff', marginBottom: '1rem', fontSize: '1.6rem' }}>Ficha Enviada com Sucesso!</h2>
-            <p style={{ color: '#a0aec0', lineHeight: '1.6', fontSize: '0.95rem' }}>
-              Suas informações médicas foram gravadas com segurança no sistema. Agradecemos imensamente pela sua colaboração e transparência!
+            <h2 style={{ color: '#2d4a3e', marginBottom: '1rem', fontSize: '1.6rem', fontWeight: '600' }}>
+              Ficha Enviada com Sucesso!
+            </h2>
+            <p style={{ color: '#5a605c', lineHeight: '1.6', fontSize: '0.95rem' }}>
+              Suas informações médicas e terapêuticas foram registradas formalmente e armazenadas com segurança em nossa base. Agradecemos sua colaboração e transparência.
             </p>
           </div>
         ) : (
           <div>
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              <h1 style={{
-                fontSize: '1.8rem',
-                color: '#ffffff',
+            <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+              <div style={{
+                fontSize: '0.75rem',
+                color: '#8b7e66',
+                textTransform: 'uppercase',
+                letterSpacing: '2px',
                 fontWeight: '700',
                 marginBottom: '0.5rem'
-              }}>Ficha Médica e Terapêutica</h1>
-              <p style={{ color: '#a0aec0', fontSize: '0.9rem' }}>
-                Preencha suas informações com segurança para acompanhamento.
+              }}>
+                Acompanhamento Seguro
+              </div>
+              <h1 style={{
+                fontSize: '1.8rem',
+                color: '#2d4a3e', // Deep premium forest green
+                fontWeight: '700',
+                margin: 0
+              }}>
+                Declaração Médica e Terapêutica
+              </h1>
+              <p style={{ color: '#6d7571', fontSize: '0.9rem', marginTop: '0.6rem', lineHeight: '1.4' }}>
+                Este formulário possui caráter confidencial e formal. Por favor, forneça as informações completas sobre o uso de substâncias, remédios e terapias de uso contínuo ou recorrente.
               </p>
             </div>
 
             {name && (
-              <div className="fade-in" style={{
-                background: 'rgba(102, 187, 106, 0.08)',
-                border: '1px solid rgba(102, 187, 106, 0.2)',
-                borderRadius: '16px',
-                padding: '1rem',
-                marginBottom: '1.5rem',
-                textAlign: 'center',
-                boxShadow: '0 4px 15px rgba(102, 187, 106, 0.05)'
+              <div style={{
+                background: '#f2eee5',
+                borderLeft: '4px solid #2d4a3e',
+                borderRadius: '8px',
+                padding: '1.2rem',
+                marginBottom: '2rem',
+                textAlign: 'left'
               }}>
-                <span style={{ fontSize: '1.2rem', fontWeight: '700', color: '#81c784', display: 'block', marginBottom: '0.2rem' }}>
-                  Oi, {name.split(' ')[0]}! 👋
+                <span style={{ fontSize: '1.05rem', fontWeight: '700', color: '#2d4a3e', display: 'block', marginBottom: '0.3rem' }}>
+                  Olá, {name}! 👋
                 </span>
-                <span style={{ fontSize: '0.82rem', color: '#cbd5e0', lineHeight: '1.4', display: 'block' }}>
-                  Preparamos este espaço seguro para você preencher seus medicamentos. Por favor, revise e confirme seus dados completos abaixo.
+                <span style={{ fontSize: '0.85rem', color: '#5a605c', lineHeight: '1.4', display: 'block' }}>
+                  Preparamos este espaço exclusivo para que você possa declarar suas informações médicas de forma oficial. Revise e complete os campos abaixo.
                 </span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>
               
               {/* Nome Completo */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#cbd5e0' }}>
-                  Nome Completo <span style={{ color: '#ef5350' }}>*</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#3a413d' }}>
+                  Nome Completo <span style={{ color: '#c0392b' }}>*</span>
                 </label>
                 <input 
                   type="text" 
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Seu nome completo"
+                  placeholder="Nome completo do declarante"
                   style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '12px',
-                    padding: '0.75rem 1rem',
+                    background: '#faf9f6',
+                    border: '1px solid #d4cbb8',
+                    borderRadius: '10px',
+                    padding: '0.8rem 1rem',
                     fontSize: '0.95rem',
-                    color: '#ffffff',
+                    color: '#1a1a1a',
                     outline: 'none',
-                    transition: 'border-color 0.2s'
+                    transition: 'all 0.2s'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#66bb6a'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#2d4a3e';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(45, 74, 62, 0.08)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#d4cbb8';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 />
               </div>
 
               {/* CPF */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#cbd5e0' }}>
-                  CPF <span style={{ color: '#ef5350' }}>*</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#3a413d' }}>
+                  CPF <span style={{ color: '#c0392b' }}>*</span>
                 </label>
                 <input 
                   type="text" 
@@ -424,24 +459,30 @@ export default function PublicFicha() {
                   onChange={handleCpfChange}
                   placeholder="000.000.000-00"
                   style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '12px',
-                    padding: '0.75rem 1rem',
+                    background: '#faf9f6',
+                    border: '1px solid #d4cbb8',
+                    borderRadius: '10px',
+                    padding: '0.8rem 1rem',
                     fontSize: '0.95rem',
-                    color: '#ffffff',
+                    color: '#1a1a1a',
                     outline: 'none',
-                    transition: 'border-color 0.2s'
+                    transition: 'all 0.2s'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#66bb6a'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#2d4a3e';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(45, 74, 62, 0.08)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#d4cbb8';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 />
               </div>
 
               {/* Telefone / WhatsApp */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#cbd5e0' }}>
-                  Telefone / WhatsApp {isGenericLink && <span style={{ color: '#ef5350' }}>*</span>}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#3a413d' }}>
+                  Telefone / WhatsApp {isGenericLink && <span style={{ color: '#c0392b' }}>*</span>}
                 </label>
                 <input 
                   type="text" 
@@ -451,62 +492,72 @@ export default function PublicFicha() {
                   disabled={!isGenericLink}
                   placeholder="(00) 00000-0000"
                   style={{
-                    background: isGenericLink ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '12px',
-                    padding: '0.75rem 1rem',
+                    background: isGenericLink ? '#faf9f6' : '#f5f3ef',
+                    border: '1px solid #d4cbb8',
+                    borderRadius: '10px',
+                    padding: '0.8rem 1rem',
                     fontSize: '0.95rem',
-                    color: isGenericLink ? '#ffffff' : '#888',
+                    color: isGenericLink ? '#1a1a1a' : '#777',
                     outline: 'none',
-                    transition: 'border-color 0.2s',
+                    transition: 'all 0.2s',
                     cursor: isGenericLink ? 'text' : 'not-allowed'
                   }}
-                  onFocus={(e) => { if (isGenericLink) e.target.style.borderColor = '#66bb6a'; }}
-                  onBlur={(e) => { if (isGenericLink) e.target.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+                  onFocus={(e) => {
+                    if (isGenericLink) {
+                      e.target.style.borderColor = '#2d4a3e';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(45, 74, 62, 0.08)';
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (isGenericLink) {
+                      e.target.style.borderColor = '#d4cbb8';
+                      e.target.style.boxShadow = 'none';
+                    }
+                  }}
                 />
               </div>
 
               {/* Adicionar Medicamentos */}
               <div style={{
-                borderTop: '1px dashed rgba(255,255,255,0.15)',
-                paddingTop: '1.5rem',
+                borderTop: '1px dashed #d4cbb8',
+                paddingTop: '1.8rem',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '1rem'
+                gap: '1.2rem'
               }}>
-                <h3 style={{ fontSize: '1rem', color: '#ffffff', fontWeight: '600', margin: 0 }}>
-                  Medicamentos e Remédios de Uso Contínuo
+                <h3 style={{ fontSize: '1.05rem', color: '#2d4a3e', fontWeight: '700', margin: 0 }}>
+                  1. Medicamentos e Remédios de Uso Contínuo
                 </h3>
-                <p style={{ fontSize: '0.8rem', color: '#a0aec0', marginTop: '-0.5rem', lineHeight: '1.4' }}>
-                  Adicione todos os remédios que você toma. Se não tomar nenhum, pode pular esta seção e clicar direto em "Enviar Minha Ficha".
+                <p style={{ fontSize: '0.85rem', color: '#5a605c', marginTop: '-0.5rem', lineHeight: '1.4' }}>
+                  Adicione abaixo todos os medicamentos que você toma regularmente. Se você não utiliza nenhuma medicação de uso contínuo, pode deixar esta seção vazia e seguir para o próximo campo.
                 </p>
 
                 {/* Sub-formulário de Medicamento */}
                 <div style={{
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  padding: '1.2rem',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(255, 255, 255, 0.04)',
+                  background: '#faf9f6',
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  border: '1px solid #d4cbb8',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '0.8rem',
+                  gap: '1rem',
                   position: 'relative'
                 }}>
                   {/* Nome do Remédio + Autocomplete */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', position: 'relative' }}>
-                    <label style={{ fontSize: '0.8rem', color: '#cbd5e0' }}>Nome do Remédio</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: '600', color: '#4a534f' }}>Nome do Medicamento</label>
                     <input 
                       type="text"
                       value={currentMed}
                       onChange={handleMedNameChange}
-                      placeholder="Ex: Sertralina, Rivotril..."
+                      placeholder="Ex: Sertralina, Rivotril, Puran T4..."
                       style={{
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.08)',
+                        background: '#ffffff',
+                        border: '1px solid #d4cbb8',
                         borderRadius: '8px',
                         padding: '0.6rem 0.8rem',
                         fontSize: '0.9rem',
-                        color: '#ffffff',
+                        color: '#1a1a1a',
                         outline: 'none'
                       }}
                     />
@@ -518,13 +569,13 @@ export default function PublicFicha() {
                         top: '100%',
                         left: 0,
                         right: 0,
-                        background: '#1b2e26',
-                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        background: '#ffffff',
+                        border: '1px solid #d4cbb8',
                         borderRadius: '8px',
                         marginTop: '0.2rem',
                         zIndex: 10,
                         overflow: 'hidden',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
                       }}>
                         {suggestions.map(s => (
                           <div 
@@ -534,11 +585,11 @@ export default function PublicFicha() {
                               padding: '0.6rem 0.8rem',
                               fontSize: '0.85rem',
                               cursor: 'pointer',
-                              borderBottom: '1px solid rgba(255,255,255,0.05)',
+                              borderBottom: '1px solid #f0ebe1',
                               transition: 'background 0.2s',
-                              color: '#cbd5e0'
+                              color: '#2d4a3e'
                             }}
-                            onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.08)'}
+                            onMouseEnter={(e) => e.target.style.background = '#faf9f6'}
                             onMouseLeave={(e) => e.target.style.background = 'transparent'}
                           >
                             💊 {s}
@@ -551,37 +602,37 @@ export default function PublicFicha() {
                   {/* Dosagem & Frequência Lado a Lado */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                      <label style={{ fontSize: '0.8rem', color: '#cbd5e0' }}>Dosagem</label>
+                      <label style={{ fontSize: '0.8rem', fontWeight: '600', color: '#4a534f' }}>Dosagem</label>
                       <input 
                         type="text"
                         value={currentDosage}
                         onChange={(e) => setCurrentDosage(e.target.value)}
                         placeholder="Ex: 50mg, 10ml, 5gts"
                         style={{
-                          background: 'rgba(255,255,255,0.04)',
-                          border: '1px solid rgba(255,255,255,0.08)',
+                          background: '#ffffff',
+                          border: '1px solid #d4cbb8',
                           borderRadius: '8px',
                           padding: '0.6rem 0.8rem',
                           fontSize: '0.9rem',
-                          color: '#ffffff',
+                          color: '#1a1a1a',
                           outline: 'none'
                         }}
                       />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                      <label style={{ fontSize: '0.8rem', color: '#cbd5e0' }}>Frequência</label>
+                      <label style={{ fontSize: '0.8rem', fontWeight: '600', color: '#4a534f' }}>Frequência</label>
                       <input 
                         type="text"
                         value={currentFreq}
                         onChange={(e) => setCurrentFreq(e.target.value)}
-                        placeholder="Ex: 1x ao dia, 12h/12h"
+                        placeholder="Ex: 1x ao dia, de 12h em 12h"
                         style={{
-                          background: 'rgba(255,255,255,0.04)',
-                          border: '1px solid rgba(255,255,255,0.08)',
+                          background: '#ffffff',
+                          border: '1px solid #d4cbb8',
                           borderRadius: '8px',
                           padding: '0.6rem 0.8rem',
                           fontSize: '0.9rem',
-                          color: '#ffffff',
+                          color: '#1a1a1a',
                           outline: 'none'
                         }}
                       />
@@ -593,9 +644,9 @@ export default function PublicFicha() {
                     type="button"
                     onClick={addMedication}
                     style={{
-                      background: 'rgba(102, 187, 106, 0.15)',
-                      color: '#81c784',
-                      border: '1px solid rgba(102, 187, 106, 0.3)',
+                      background: 'rgba(45, 74, 62, 0.05)',
+                      color: '#2d4a3e',
+                      border: '1px solid rgba(45, 74, 62, 0.2)',
                       borderRadius: '8px',
                       padding: '0.6rem',
                       fontSize: '0.85rem',
@@ -606,44 +657,41 @@ export default function PublicFicha() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '0.4rem',
-                      transition: 'background 0.2s, transform 0.1s'
+                      transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => e.target.style.background = 'rgba(102, 187, 106, 0.25)'}
-                    onMouseLeave={(e) => e.target.style.background = 'rgba(102, 187, 106, 0.15)'}
-                    onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
-                    onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                    onMouseEnter={(e) => e.target.style.background = 'rgba(45, 74, 62, 0.1)'}
+                    onMouseLeave={(e) => e.target.style.background = 'rgba(45, 74, 62, 0.05)'}
                   >
-                    ➕ Adicionar Remédio à Lista
+                    ➕ Adicionar Medicamento à Ficha
                   </button>
                 </div>
 
                 {/* Lista de Remédios Já Adicionados */}
                 {medications.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginTop: '0.5rem' }}>
-                    <div style={{ fontSize: '0.8rem', color: '#81c784', fontWeight: '600' }}>
-                      Medicamentos Adicionados ({medications.length}):
+                    <div style={{ fontSize: '0.85rem', color: '#2d4a3e', fontWeight: '700' }}>
+                      Medicamentos Inclusos ({medications.length}):
                     </div>
                     {medications.map((med, index) => (
                       <div 
                         key={index}
                         style={{
-                          background: 'rgba(255, 255, 255, 0.03)',
-                          border: '1px solid rgba(255, 255, 255, 0.05)',
-                          borderRadius: '12px',
+                          background: '#ffffff',
+                          border: '1px solid #e5dfd3',
+                          borderRadius: '10px',
                           padding: '0.6rem 1rem',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          gap: '1rem',
-                          animation: 'fadeIn 0.2s ease'
+                          gap: '1rem'
                         }}
                       >
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#ffffff' }}>
+                          <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1a1a1a' }}>
                             💊 {med.name}
                           </span>
-                          <span style={{ fontSize: '0.75rem', color: '#cbd5e0' }}>
-                            Dose: <strong style={{ color: '#fff' }}>{med.dosage}</strong> | Freq: <strong style={{ color: '#fff' }}>{med.frequency}</strong>
+                          <span style={{ fontSize: '0.75rem', color: '#5a605c' }}>
+                            Dose: <strong>{med.dosage}</strong> | Frequência: <strong>{med.frequency}</strong>
                           </span>
                         </div>
                         <button
@@ -652,14 +700,14 @@ export default function PublicFicha() {
                           style={{
                             background: 'transparent',
                             border: 'none',
-                            color: '#ef5350',
+                            color: '#c0392b',
                             fontSize: '0.8rem',
                             cursor: 'pointer',
                             padding: '0.2rem 0.5rem',
                             borderRadius: '4px',
                             fontWeight: '600'
                           }}
-                          onMouseEnter={(e) => e.target.style.background = 'rgba(239, 83, 80, 0.15)'}
+                          onMouseEnter={(e) => e.target.style.background = 'rgba(192, 57, 43, 0.08)'}
                           onMouseLeave={(e) => e.target.style.background = 'transparent'}
                         >
                           Remover
@@ -670,12 +718,94 @@ export default function PublicFicha() {
                 )}
               </div>
 
+              {/* Novo Campo: Observações / Terapias Alternativas */}
+              <div style={{
+                borderTop: '1px dashed #d4cbb8',
+                paddingTop: '1.8rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem'
+              }}>
+                <h3 style={{ fontSize: '1.05rem', color: '#2d4a3e', fontWeight: '700', margin: 0 }}>
+                  2. Observações / Terapias Alternativas
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: '#5a605c', marginTop: '-0.2rem', lineHeight: '1.4' }}>
+                  Declare o uso de substâncias naturais, homeopatia, fitoterápicos, rituais, chás específicos (como Ayahuasca, Cogumelos, etc.), florais, microdosagem ou qualquer terapia de saúde alternativa recorrente.
+                </p>
+                <textarea
+                  value={observations}
+                  onChange={(e) => setObservations(e.target.value)}
+                  placeholder="Descreva aqui o uso de terapias alternativas, substâncias ou observações médicas importantes relevantes para a sua segurança..."
+                  rows={4}
+                  style={{
+                    background: '#faf9f6',
+                    border: '1px solid #d4cbb8',
+                    borderRadius: '10px',
+                    padding: '0.8rem 1rem',
+                    fontSize: '0.9rem',
+                    color: '#1a1a1a',
+                    outline: 'none',
+                    transition: 'all 0.2s',
+                    fontFamily: 'inherit',
+                    resize: 'vertical'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#2d4a3e';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(45, 74, 62, 0.08)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#d4cbb8';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+
+              {/* Novo Check: Declaração de Responsabilidade */}
+              <div style={{
+                background: '#faf9f6',
+                border: '1px solid #e5dfd3',
+                borderRadius: '12px',
+                padding: '1.2rem',
+                display: 'flex',
+                gap: '0.8rem',
+                alignItems: 'flex-start',
+                cursor: 'pointer'
+              }}
+              onClick={() => setDeclarationChecked(!declarationChecked)}
+              >
+                <input 
+                  type="checkbox"
+                  checked={declarationChecked}
+                  onChange={(e) => setDeclarationChecked(e.target.checked)}
+                  onClick={(e) => e.stopPropagation()} // Evita duplo clique
+                  style={{ 
+                    cursor: 'pointer', 
+                    width: '18px', 
+                    height: '18px', 
+                    accentColor: '#2d4a3e',
+                    marginTop: '0.2rem'
+                  }}
+                />
+                <label 
+                  style={{ 
+                    fontSize: '0.85rem', 
+                    color: '#3a413d', 
+                    lineHeight: '1.5',
+                    cursor: 'pointer',
+                    userSelect: 'none'
+                  }}
+                >
+                  <strong>Declaração de Veracidade e Responsabilidade:</strong><br />
+                  Declaro que as informações fornecidas acima são totalmente verdadeiras e exatas, e que não utilizo nenhuma medicação contínua além das informadas. Declaro, também, que todo uso de terapias alternativas, fitoterápicos ou substâncias naturais recorrentes está formalmente declarado no campo de observações acima.
+                </label>
+              </div>
+
               {/* Botão de Submeter Ficha */}
               <button
                 type="submit"
                 disabled={loading}
                 style={{
-                  background: 'linear-gradient(135deg, #66bb6a 0%, #43a047 100%)',
+                  background: 'linear-gradient(135deg, #2d4a3e 0%, #1c3028 100%)',
                   color: '#ffffff',
                   border: 'none',
                   borderRadius: '12px',
@@ -683,19 +813,19 @@ export default function PublicFicha() {
                   fontSize: '1rem',
                   fontWeight: '700',
                   cursor: 'pointer',
-                  marginTop: '1.5rem',
-                  boxShadow: '0 4px 15px rgba(102, 187, 106, 0.2)',
+                  marginTop: '1rem',
+                  boxShadow: '0 4px 15px rgba(45, 74, 62, 0.15)',
                   transition: 'opacity 0.2s, transform 0.1s',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}
-                onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+                onMouseEnter={(e) => e.target.style.opacity = '0.95'}
                 onMouseLeave={(e) => e.target.style.opacity = '1'}
                 onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
                 onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
               >
-                {loading ? 'Processando envio...' : 'Enviar Minha Ficha'}
+                {loading ? 'Processando envio...' : 'Enviar Minha Declaração'}
               </button>
             </form>
           </div>
